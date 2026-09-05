@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0C0A">
+<meta name="description" content="Diario di carichi, serie e progressioni">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scheda">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<title>Scheda di Allenamento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    /* dark-first: base look, sampled from the Vitruvian app's near-black + dusty terracotta */
+    --ground:#0E0C0A;
+    --surface:#18140F;
+    --surface-2:#221C15;
+    --ink:#EEE8E0;
+    --ink-muted:#A79C8E;
+    --ink-faint:#6E6459;
+    --line:#2B241C;
+    --line-strong:#3D3327;
+    --accent:#CC9A78;
+    --accent-ink:#241407;
+    --accent-soft:#3A2712;
+    --steel:#8FADC7;
+    --steel-soft:#1F2A33;
+    --good:#8FBE78;
+    --good-soft:#1F2A17;
+    --warn:#D6AA46;
+    --warn-soft:#2E2410;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 8px 22px rgba(0,0,0,.4);
+    --font-display:'Big Shoulders Display','Arial Narrow',sans-serif;
+    --font-body:'Archivo','Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono','Consolas',monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --ground:#F3EEE6;
+      --surface:#FAF7F2;
+      --surface-2:#FFFFFF;
+      --ink:#241A10;
+      --ink-muted:#7B6C5C;
+      --ink-faint:#A99B8A;
+      --line:#E5DACA;
+      --line-strong:#D3C3AC;
+      --accent:#A8663E;
+      --accent-ink:#FFFFFF;
+      --accent-soft:#EFDCC7;
+      --steel:#3E5972;
+      --steel-soft:#DCE4EA;
+      --good:#3F6A34;
+      --good-soft:#DEE9D7;
+      --warn:#8C6A18;
+      --warn-soft:#F1E4C7;
+      --shadow:0 1px 2px rgba(36,26,16,.07), 0 6px 16px rgba(36,26,16,.06);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#F3EEE6;
+    --surface:#FAF7F2;
+    --surface-2:#FFFFFF;
+    --ink:#241A10;
+    --ink-muted:#7B6C5C;
+    --ink-faint:#A99B8A;
+    --line:#E5DACA;
+    --line-strong:#D3C3AC;
+    --accent:#A8663E;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#EFDCC7;
+    --steel:#3E5972;
+    --steel-soft:#DCE4EA;
+    --good:#3F6A34;
+    --good-soft:#DEE9D7;
+    --warn:#8C6A18;
+    --warn-soft:#F1E4C7;
+    --shadow:0 1px 2px rgba(36,26,16,.07), 0 6px 16px rgba(36,26,16,.06);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+
+  .shell{ max-width:820px; margin:0 auto; padding:28px 20px 80px; }
+
+  header.top{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+    padding-bottom:20px; margin-bottom:22px; border-bottom:2px solid var(--ink);
+  }
+  .brand h1{
+    font-family:var(--font-display); font-weight:800; font-size:40px;
+    letter-spacing:.2px; margin:0; line-height:.9; text-wrap:balance;
+  }
+  .brand p{ margin:6px 0 0; color:var(--ink-muted); font-size:13.5px; }
+
+  .day-tabs{
+    display:flex; gap:8px; overflow-x:auto; padding:4px 4px 10px; margin-bottom:18px;
+    scrollbar-width:thin;
+  }
+  .day-tab{
+    font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:.2px;
+    padding:9px 20px; border-radius:999px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink-muted); cursor:pointer;
+    flex:none;
+  }
+  .day-tab:hover{ color:var(--ink); border-color:var(--line-strong); }
+  .day-tab.active{ color:var(--accent-ink); background:var(--accent); border-color:var(--accent); }
+  .day-tab-add{
+    font-family:var(--font-body); font-weight:600; font-size:14px; color:var(--ink-muted);
+    background:transparent; border:1px dashed var(--line-strong); border-radius:999px;
+    padding:9px 18px; cursor:pointer; flex:none; align-self:center;
+  }
+  .day-tab-add:hover{ color:var(--accent); border-color:var(--accent); }
+
+  .btn{
+    font-family:var(--font-body); font-weight:600; font-size:13.5px; cursor:pointer;
+    border-radius:11px; padding:9px 14px; border:1px solid var(--line-strong);
+    background:var(--surface-2); color:var(--ink);
+  }
+  .btn:hover{ border-color:var(--ink-faint); }
+  .btn.primary{
+    background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
+    border-radius:999px; padding:10px 20px; font-weight:700;
+  }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .btn.ghost{ background:transparent; border-color:transparent; color:var(--ink-muted); padding:6px 8px; }
+  .btn.ghost:hover{ color:var(--accent); }
+  .btn.danger:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn.small{ padding:6px 10px; font-size:12.5px; }
+  .btn.primary.small{ padding:7px 16px; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+
+  .day-header-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; }
+  .day-name-edit{ display:flex; align-items:center; gap:8px; }
+  .day-name-edit input{
+    font-family:var(--font-display); font-weight:700; font-size:19px; padding:4px 8px;
+    border:1px solid var(--line-strong); border-radius:6px; background:var(--surface-2); color:var(--ink);
+  }
+
+  .ex-list{ display:flex; flex-direction:column; gap:10px; }
+  .ex-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:20px;
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  .ex-head{
+    display:flex; align-items:center; gap:14px; padding:16px 18px; cursor:pointer;
+  }
+  .ex-head:hover{ background:var(--surface-2); }
+  .ex-name{ font-family:var(--font-display); font-weight:700; font-size:21px; flex:1 1 auto; min-width:0; }
+  .ex-name .sub{ font-family:var(--font-body); font-weight:500; font-size:12.5px; color:var(--ink-muted); display:block; margin-top:1px; }
+  .ex-target{ font-family:var(--font-mono); font-size:13px; color:var(--ink-muted); flex:none; }
+  .ex-last{ display:flex; flex-direction:column; align-items:flex-end; flex:none; min-width:84px; }
+  .ex-last .kg{ font-family:var(--font-mono); font-weight:600; font-size:17px; }
+  .ex-last .delta{ font-family:var(--font-mono); font-size:11.5px; }
+  .ex-last .delta.up{ color:var(--good); }
+  .ex-last .delta.down{ color:var(--ink-muted); }
+  .pr-badge{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.05em; font-weight:600;
+    background:var(--good-soft); color:var(--good); border-radius:99px; padding:2px 7px; margin-top:3px;
+  }
+  .chevron{ flex:none; color:var(--ink-faint); transition:transform .15s ease; }
+  .ex-card.open .chevron{ transform:rotate(90deg); }
+
+  .ex-body{ border-top:1px solid var(--line); padding:16px; display:none; }
+  .ex-card.open .ex-body{ display:block; }
+
+  .ex-actions-row{ display:flex; justify-content:flex-end; gap:6px; margin-bottom:14px; }
+
+  .edit-form{
+    display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:16px;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:16px; padding:14px;
+  }
+  .field.full{ grid-column:1/-1; }
+  .field label{
+    display:block; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--ink-muted); margin-bottom:4px;
+  }
+  .field input, .field textarea{
+    width:100%; font-family:var(--font-body); font-size:14px; padding:8px 10px;
+    border:1px solid var(--line-strong); border-radius:10px; background:var(--surface-2); color:var(--ink);
+  }
+  .field.mono input{ font-family:var(--font-mono); }
+  .edit-form-actions{ grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; }
+
+  .log-form{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:10px; align-items:end;
+    background:var(--accent-soft); border:1px solid var(--line); border-radius:16px; padding:16px;
+    margin-bottom:18px;
+  }
+  .log-form .field.wide{ grid-column:span 1; }
+  .log-form .submit-cell{ grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .plate-hint{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-muted); }
+
+  .chart-wrap{ margin-bottom:16px; }
+  .chart-wrap svg{ width:100%; height:auto; display:block; }
+  .empty-note{
+    font-size:13px; color:var(--ink-muted); background:var(--surface-2); border:1px dashed var(--line-strong);
+    border-radius:8px; padding:12px 14px;
+  }
+
+  table.hist{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.hist th{
+    text-align:left; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--ink-muted); font-weight:500; padding:0 8px 6px; border-bottom:1px solid var(--line-strong);
+  }
+  table.hist td{ padding:8px; border-bottom:1px solid var(--line); font-family:var(--font-mono); }
+  table.hist td.note{ font-family:var(--font-body); color:var(--ink-muted); }
+  table.hist tr:last-child td{ border-bottom:none; }
+  table.hist td.actions{ text-align:right; font-family:var(--font-body); }
+  .hist-wrap{ overflow-x:auto; }
+
+  .add-ex-zone{ margin-top:14px; }
+  .add-ex-form{
+    display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; align-items:end;
+    background:var(--surface); border:1px dashed var(--line-strong); border-radius:16px; padding:14px; margin-top:10px;
+  }
+  .add-day-form{
+    display:flex; gap:8px; align-items:center; margin-bottom:18px;
+  }
+  .add-day-form input{
+    font-family:var(--font-body); font-size:14px; padding:8px 10px; border:1px solid var(--line-strong);
+    border-radius:7px; background:var(--surface-2); color:var(--ink); flex:1;
+  }
+  .rename-day-form{ display:flex; gap:8px; align-items:center; }
+  .rename-day-form input{
+    font-family:var(--font-display); font-weight:700; font-size:20px; padding:5px 10px;
+    border:1px solid var(--line-strong); border-radius:10px; background:var(--surface-2); color:var(--ink);
+  }
+  .confirm-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .confirm-row span{ font-size:12.5px; color:var(--ink-muted); }
+
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--ink-muted);
+  }
+  .empty-state h2{ font-family:var(--font-display); font-size:26px; color:var(--ink); margin:0 0 8px; }
+
+  @media (max-width:620px){
+    .shell{ padding:20px 14px 64px; }
+    .brand h1{ font-size:30px; }
+    header.top{ flex-direction:column; align-items:flex-start; padding-bottom:16px; margin-bottom:18px; }
+
+    /* exercise row: name on its own line, target and last load below it */
+    .ex-head{
+      display:grid; align-items:start;
+      grid-template-columns:16px minmax(0,1fr) auto;
+      grid-template-areas:
+        "chev name last"
+        ".    target target";
+      column-gap:12px; row-gap:4px; padding:14px 14px;
+    }
+    .chevron{ grid-area:chev; margin-top:6px; }
+    .ex-name{ grid-area:name; font-size:19px; }
+    .ex-target{ grid-area:target; justify-self:start; }
+    .ex-last{ grid-area:last; min-width:0; }
+
+    .ex-body{ padding:14px; }
+    .edit-form, .log-form, .add-ex-form{ grid-template-columns:1fr 1fr; }
+    .add-ex-form > div:last-child{ grid-column:1/-1; }
+    .log-form .submit-cell{ flex-direction:column; align-items:stretch; }
+    .log-form .submit-cell .btn{ width:100%; }
+    .edit-form-actions{ flex-wrap:wrap; }
+    .edit-form-actions .btn{ flex:1 1 auto; }
+
+    .day-header-row{ flex-wrap:wrap; }
+    .day-header-row > div{ flex-wrap:wrap; }
+    .day-name-edit{ min-width:0; flex:1 1 100%; }
+    .rename-day-form{ flex-wrap:wrap; }
+    .rename-day-form input{ flex:1 1 100%; min-width:0; font-size:18px; }
+    .confirm-row{ justify-content:flex-start; }
+
+    table.hist{ font-size:12.5px; }
+    table.hist td, table.hist th{ padding:7px 6px; white-space:nowrap; }
+    table.hist td.note{ white-space:normal; min-width:90px; }
+  }
+</style><style>
+  body{
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <h1>Scheda di Allenamento</h1>
+      <p>Il tuo diario di carichi, serie e progressioni</p>
+    </div>
+  </header>
+
+  <div class="day-tabs" id="dayTabs"></div>
+
+  <div id="addDayZone"></div>
+
+  <main id="dayPanel"></main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const STORAGE_KEY = "schedaDiFerro:v1";
+  const BAR_KG = 20;
+  const PLATES = [25,20,15,10,5,2.5,1.25];
+
+  function uid(prefix){ return prefix + "-" + Math.random().toString(36).slice(2,9); }
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function fmtDate(iso){
+    const [y,m,d] = iso.split("-");
+    return d + "/" + m + "/" + y.slice(2);
+  }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  function defaultState(){
+    return {
+      giorni: [
+        {
+          id: uid("g"), nome: "Giorno A — Spinta", ordine: 0,
+          esercizi: [
+            { id: uid("e"), nome: "Panca piana con bilanciere", serieTarget: 4, ripTarget: "6-8", note: "", storico: [] },
+            { id: uid("e"), nome: "Military press manubri", serieTarget: 3, ripTarget: "8-10", note: "", storico: [] },
+            { id: uid("e"), nome: "Croci ai cavi alti", serieTarget: 3, ripTarget: "12-15", note: "", storico: [] },
+            { id: uid("e"), nome: "French press bilanciere", serieTarget: 3, ripTarget: "10-12", note: "", storico: [] },
+            { id: uid("e"), nome: "Dip alle parallele", serieTarget: 3, ripTarget: "max", note: "zavorra se serve", storico: [] }
+          ]
+        },
+        {
+          id: uid("g"), nome: "Giorno B — Trazione", ordine: 1,
+          esercizi: [
+            { id: uid("e"), nome: "Stacco da terra", serieTarget: 4, ripTarget: "5", note: "", storico: [] },
+            { id: uid("e"), nome: "Trazioni alla sbarra", serieTarget: 4, ripTarget: "6-8", note: "presa prona", storico: [] },
+            { id: uid("e"), nome: "Rematore con bilanciere", serieTarget: 3, ripTarget: "8-10", note: "", storico: [] },
+            { id: uid("e"), nome: "Face pull ai cavi", serieTarget: 3, ripTarget: "15", note: "", storico: [] },
+            { id: uid("e"), nome: "Curl con bilanciere", serieTarget: 3, ripTarget: "10", note: "", storico: [] }
+          ]
+        },
+        {
+          id: uid("g"), nome: "Giorno C — Gambe", ordine: 2,
+          esercizi: [
+            { id: uid("e"), nome: "Squat con bilanciere", serieTarget: 4, ripTarget: "6", note: "", storico: [] },
+            { id: uid("e"), nome: "Affondi con manubri", serieTarget: 3, ripTarget: "10/gamba", note: "", storico: [] },
+            { id: uid("e"), nome: "Leg press", serieTarget: 3, ripTarget: "10-12", note: "", storico: [] },
+            { id: uid("e"), nome: "Leg curl", serieTarget: 3, ripTarget: "12", note: "", storico: [] },
+            { id: uid("e"), nome: "Calf raise in piedi", serieTarget: 4, ripTarget: "15", note: "", storico: [] }
+          ]
+        }
+      ]
+    };
+  }
+
+  let state = null;
+  let ui = {
+    selectedDayId:null, openEx:new Set(), editEx:new Set(), addExFor:null, addDayOpen:false,
+    renamingDay:null, confirmDeleteDay:null, confirmDeleteEx:null, confirmDeleteHist:null
+  };
+  let db = null;
+  let dbReady = false;
+
+  function loadLocal(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    }catch(e){}
+    return null;
+  }
+  function saveLocal(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  function getDay(dayId){ return state.giorni.find(g => g.id === dayId); }
+  function getEx(dayId, exId){ const d = getDay(dayId); return d && d.esercizi.find(e => e.id === exId); }
+
+  // ---- persistence write-through ----
+  function persistDay(day){
+    saveLocal();
+    if (dbReady && db){
+      db.doc("giorni/" + day.id).set(day).catch(()=>{});
+    }
+  }
+  function persistDeleteDay(dayId){
+    saveLocal();
+    if (dbReady && db){
+      db.doc("giorni/" + dayId).delete().catch(()=>{});
+    }
+  }
+
+  // ---- plate calculator ----
+  function calcolaDischi(caricoTotale){
+    if (!caricoTotale || caricoTotale <= BAR_KG) return "solo bilanciere (20 kg)";
+    let perLato = (caricoTotale - BAR_KG) / 2;
+    let remaining = perLato;
+    const parts = [];
+    for (const p of PLATES){
+      const count = Math.floor((remaining + 0.001) / p);
+      if (count > 0){ parts.push(count + "×" + p); remaining -= count * p; }
+    }
+    if (remaining > 0.05){
+      return perLato.toFixed(2).replace(".00","") + " kg/lato — non esatto con dischi standard";
+    }
+    return parts.join(" + ") + " per lato (bilanciere 20 kg)";
+  }
+
+  // ---- progression helpers ----
+  function ultimiDati(storico){
+    if (!storico.length) return null;
+    const sorted = [...storico].sort((a,b) => a.data.localeCompare(b.data));
+    const last = sorted[sorted.length - 1];
+    const prev = sorted.length > 1 ? sorted[sorted.length - 2] : null;
+    const pr = Math.max(...sorted.map(s => s.carico));
+    return { last, prev, pr, sorted };
+  }
+
+  function sparklineSVG(sorted){
+    // narrow viewBox on phones so labels don't shrink when the SVG scales to the card
+    const narrow = window.innerWidth <= 620;
+    const w = narrow ? 320 : 560;
+    const h = narrow ? 175 : 130;
+    const padL = narrow ? 34 : 40, padR = 14, padT = 18, padB = 26;
+    const values = sorted.map(s => s.carico);
+    const min = Math.min(...values), max = Math.max(...values);
+    const span = (max - min) || 1;
+    const innerW = w - padL - padR, innerH = h - padT - padB;
+    const pts = sorted.map((s,i) => {
+      const x = padL + (sorted.length === 1 ? innerW/2 : (i/(sorted.length-1)) * innerW);
+      const y = padT + innerH - ((s.carico - min)/span) * innerH;
+      return { x, y, carico:s.carico, data:s.data };
+    });
+    const poly = pts.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
+    const prVal = max;
+    let circles = pts.map((p,i) => {
+      const isPR = p.carico === prVal;
+      const isLast = i === pts.length - 1;
+      const r = isLast ? 5 : 3.2;
+      const cls = isPR ? "pt pt-pr" : "pt";
+      return `<circle class="${cls}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}"></circle>`;
+    }).join("");
+    const first = pts[0], last = pts[pts.length-1];
+    return `<svg viewBox="0 0 ${w} ${h}" class="sparkline" role="img" aria-label="Andamento del carico">
+      <style>
+        .sparkline .axis-label{ font-family:'IBM Plex Mono',monospace; font-size:11px; fill:var(--ink-muted); }
+        .sparkline .date-label{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; fill:var(--ink-faint); }
+        .sparkline .line{ fill:none; stroke:var(--accent); stroke-width:2.25; }
+        .sparkline .pt{ fill:var(--surface); stroke:var(--accent); stroke-width:2; }
+        .sparkline .pt-pr{ fill:var(--good); stroke:var(--good); }
+      </style>
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="var(--line-strong)" stroke-width="1"></line>
+      <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="var(--line-strong)" stroke-width="1"></line>
+      <text class="axis-label" x="4" y="${padT+4}">${max}</text>
+      <text class="axis-label" x="4" y="${h-padB+4}">${min}</text>
+      <text class="date-label" x="${padL}" y="${h-6}" text-anchor="start">${fmtDate(first.data)}</text>
+      <text class="date-label" x="${w-padR}" y="${h-6}" text-anchor="end">${fmtDate(last.data)}</text>
+      <polyline class="line" points="${poly}"></polyline>
+      ${circles}
+    </svg>`;
+  }
+
+  // ---- rendering ----
+  function render(){
+    if (!state) return;
+    if (!ui.selectedDayId || !getDay(ui.selectedDayId)){
+      ui.selectedDayId = state.giorni[0] ? state.giorni[0].id : null;
+    }
+    renderTabs();
+    renderAddDayZone();
+    renderDayPanel();
+  }
+
+  function renderTabs(){
+    const tabs = document.getElementById("dayTabs");
+    const sorted = [...state.giorni].sort((a,b) => a.ordine - b.ordine);
+    tabs.innerHTML = sorted.map(g => `
+      <button class="day-tab ${g.id === ui.selectedDayId ? "active" : ""}" data-action="select-day" data-day="${g.id}">${esc(g.nome)}</button>
+    `).join("") + `<button class="day-tab-add" data-action="toggle-add-day">+ Giorno</button>`;
+  }
+
+  function renderAddDayZone(){
+    const zone = document.getElementById("addDayZone");
+    if (!ui.addDayOpen){ zone.innerHTML = ""; return; }
+    zone.innerHTML = `
+      <form class="add-day-form" data-form="add-day">
+        <input type="text" name="nome" placeholder="Nome del giorno, es. Giorno D — Full Body" required maxlength="60" autofocus>
+        <button type="submit" class="btn primary small">Crea</button>
+        <button type="button" class="btn ghost small" data-action="toggle-add-day">Annulla</button>
+      </form>`;
+  }
+
+  function renderDayPanel(){
+    const panel = document.getElementById("dayPanel");
+    if (!state.giorni.length){
+      panel.innerHTML = `<div class="empty-state"><h2>Nessun giorno impostato</h2><p>Aggiungi il primo giorno di allenamento per iniziare.</p></div>`;
+      return;
+    }
+    const day = getDay(ui.selectedDayId);
+    if (!day){ panel.innerHTML = ""; return; }
+
+    const exHtml = day.esercizi.map(ex => renderExercise(day, ex)).join("");
+
+    let headerRight;
+    if (ui.renamingDay === day.id){
+      headerRight = "";
+    } else if (ui.confirmDeleteDay === day.id){
+      headerRight = `
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:13px;color:var(--ink-muted);">Eliminare "${esc(day.nome)}" e tutti i suoi esercizi?</span>
+          <button class="btn small danger" data-action="delete-day-confirm" data-day="${day.id}">Sì, elimina</button>
+          <button class="btn ghost small" data-action="delete-day-cancel">Annulla</button>
+        </div>`;
+    } else {
+      headerRight = `
+        <div style="display:flex;gap:6px;">
+          <button class="btn small" data-action="rename-day" data-day="${day.id}">Rinomina</button>
+          <button class="btn small danger" data-action="delete-day" data-day="${day.id}">Elimina giorno</button>
+        </div>`;
+    }
+
+    const headerLeft = ui.renamingDay === day.id
+      ? `<form class="rename-day-form" data-form="rename-day" data-day="${day.id}">
+          <input type="text" name="nome" value="${esc(day.nome)}" required maxlength="60" autofocus>
+          <button type="submit" class="btn primary small">Salva</button>
+          <button type="button" class="btn ghost small" data-action="cancel-rename-day">Annulla</button>
+        </form>`
+      : `<span style="font-family:var(--font-display);font-weight:800;font-size:22px;">${esc(day.nome)}</span>`;
+
+    panel.innerHTML = `
+      <div class="day-header-row">
+        <div class="day-name-edit">${headerLeft}</div>
+        ${headerRight}
+      </div>
+      <div class="ex-list">${exHtml || '<div class="empty-note">Nessun esercizio in questo giorno. Aggiungine uno qui sotto.</div>'}</div>
+      <div class="add-ex-zone">
+        ${ui.addExFor === day.id ? `
+          <form class="add-ex-form" data-form="add-ex" data-day="${day.id}">
+            <div class="field full"><label>Esercizio</label><input type="text" name="nome" placeholder="Nome esercizio" required maxlength="60"></div>
+            <div class="field"><label>Serie</label><input type="number" name="serieTarget" min="1" max="20" value="3" required></div>
+            <div class="field"><label>Ripetizioni</label><input type="text" name="ripTarget" placeholder="es. 8-10" value="10" required maxlength="12"></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary small">Aggiungi</button>
+              <button type="button" class="btn ghost small" data-action="toggle-add-ex" data-day="${day.id}">Annulla</button>
+            </div>
+          </form>` : `<button class="btn" data-action="toggle-add-ex" data-day="${day.id}">+ Aggiungi esercizio</button>`}
+      </div>
+    `;
+  }
+
+  function renderExercise(day, ex){
+    const open = ui.openEx.has(ex.id);
+    const editing = ui.editEx.has(ex.id);
+    const info = ultimiDati(ex.storico);
+
+    let lastBlock = `<span class="kg">—</span>`;
+    if (info){
+      let deltaHtml = "";
+      if (info.prev){
+        const diff = info.last.carico - info.prev.carico;
+        const sign = diff > 0 ? "+" : "";
+        deltaHtml = `<span class="delta ${diff > 0 ? "up" : "down"}">${sign}${diff} kg</span>`;
+      }
+      const prBadge = info.last.carico === info.pr ? `<span class="pr-badge">PR</span>` : "";
+      lastBlock = `<span class="kg">${info.last.carico} kg</span>${deltaHtml}${prBadge}`;
+    }
+
+    let editHtml = "";
+    if (editing){
+      const actionsHtml = ui.confirmDeleteEx === ex.id
+        ? `<div class="confirm-row" style="width:100%;">
+            <span>Eliminare "${esc(ex.nome)}" e il suo storico?</span>
+            <button type="button" class="btn small danger" data-action="delete-ex-confirm" data-day="${day.id}" data-ex="${ex.id}">Sì, elimina</button>
+            <button type="button" class="btn ghost small" data-action="delete-ex-cancel">Annulla</button>
+          </div>`
+        : `<button type="button" class="btn ghost small" data-action="delete-ex" data-ex="${ex.id}">Elimina esercizio</button>
+           <button type="button" class="btn small" data-action="toggle-edit-ex" data-ex="${ex.id}">Chiudi</button>
+           <button type="submit" class="btn primary small">Salva</button>`;
+      editHtml = `
+        <form class="edit-form" data-form="edit-ex" data-day="${day.id}" data-ex="${ex.id}">
+          <div class="field full"><label>Nome esercizio</label><input type="text" name="nome" value="${esc(ex.nome)}" required maxlength="60"></div>
+          <div class="field"><label>Serie target</label><input type="number" name="serieTarget" min="1" max="20" value="${ex.serieTarget}" required></div>
+          <div class="field"><label>Ripetizioni target</label><input type="text" name="ripTarget" value="${esc(ex.ripTarget)}" required maxlength="12"></div>
+          <div class="field full"><label>Note</label><input type="text" name="note" value="${esc(ex.note || "")}" maxlength="120" placeholder="es. presa larga, tempo 3-1-1"></div>
+          <div class="edit-form-actions">
+            ${actionsHtml}
+          </div>
+        </form>`;
+    }
+
+    const suggestedCarico = info ? info.last.carico : "";
+    const logForm = `
+      <form class="log-form" data-form="log-session" data-day="${day.id}" data-ex="${ex.id}">
+        <div class="field"><label>Data</label><input type="date" name="data" value="${todayISO()}" required></div>
+        <div class="field mono"><label>Carico (kg)</label><input type="number" name="carico" step="0.5" min="0" placeholder="${suggestedCarico || 0}" required></div>
+        <div class="field"><label>Serie</label><input type="number" name="serie" min="1" max="20" value="${ex.serieTarget}" required></div>
+        <div class="field"><label>Ripetizioni</label><input type="number" name="ripetizioni" min="1" max="100" placeholder="es. 8" required></div>
+        <div class="field"><label>RPE (opz.)</label><input type="number" name="rpe" min="1" max="10" step="0.5" placeholder="1-10"></div>
+        <div class="submit-cell">
+          <span class="plate-hint" data-plate-hint>Inserisci il carico per vedere i dischi per lato</span>
+          <button type="submit" class="btn primary small">Registra sessione</button>
+        </div>
+      </form>`;
+
+    let chartBlock = `<div class="empty-note">Nessuna sessione registrata per questo esercizio. Registra la prima qui sopra.</div>`;
+    let histBlock = "";
+    if (info){
+      chartBlock = `<div class="chart-wrap">${sparklineSVG(info.sorted)}</div>`;
+      const rows = [...info.sorted].reverse().map(s => `
+        <tr>
+          <td>${fmtDate(s.data)}</td>
+          <td>${s.carico} kg</td>
+          <td>${s.serie}×${s.ripetizioni}</td>
+          <td>${s.rpe ? s.rpe : "—"}</td>
+          <td class="note">${esc(s.note || "")}</td>
+          <td class="actions">${
+            ui.confirmDeleteHist === s.id
+              ? `<button class="btn small danger" data-action="delete-hist-confirm" data-day="${day.id}" data-ex="${ex.id}" data-hist="${s.id}">Conferma</button>
+                 <button class="btn ghost small" data-action="delete-hist-cancel">Annulla</button>`
+              : `<button class="btn ghost small" data-action="delete-hist" data-hist="${s.id}">Elimina</button>`
+          }</td>
+        </tr>`).join("");
+      histBlock = `
+        <div class="hist-wrap">
+          <table class="hist">
+            <thead><tr><th>Data</th><th>Carico</th><th>Serie×Rip</th><th>RPE</th><th>Note</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    return `
+      <div class="ex-card ${open ? "open" : ""}" data-ex-card="${ex.id}">
+        <div class="ex-head" data-action="toggle-ex" data-ex="${ex.id}">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M6 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="ex-name">${esc(ex.nome)}${ex.note ? `<span class="sub">${esc(ex.note)}</span>` : ""}</div>
+          <div class="ex-target">${ex.serieTarget}×${esc(ex.ripTarget)}</div>
+          <div class="ex-last">${lastBlock}</div>
+        </div>
+        <div class="ex-body">
+          <div class="ex-actions-row">
+            <button class="btn ghost small" data-action="toggle-edit-ex" data-ex="${ex.id}">${editing ? "Annulla modifica" : "Modifica esercizio"}</button>
+          </div>
+          ${editHtml}
+          ${logForm}
+          ${chartBlock}
+          ${histBlock}
+        </div>
+      </div>`;
+  }
+
+  // ---- event delegation ----
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-action]");
+    if (!t) return;
+    const action = t.getAttribute("data-action");
+
+    if (action === "select-day"){
+      ui.selectedDayId = t.getAttribute("data-day");
+      render();
+    } else if (action === "toggle-add-day"){
+      ui.addDayOpen = !ui.addDayOpen;
+      render();
+    } else if (action === "toggle-add-ex"){
+      const dayId = t.getAttribute("data-day");
+      ui.addExFor = ui.addExFor === dayId ? null : dayId;
+      render();
+    } else if (action === "toggle-ex"){
+      const id = t.getAttribute("data-ex");
+      if (ui.openEx.has(id)) ui.openEx.delete(id); else ui.openEx.add(id);
+      render();
+    } else if (action === "toggle-edit-ex"){
+      const id = t.getAttribute("data-ex");
+      if (ui.editEx.has(id)) ui.editEx.delete(id); else { ui.editEx.add(id); ui.openEx.add(id); }
+      render();
+    } else if (action === "delete-ex"){
+      ui.confirmDeleteEx = t.getAttribute("data-ex");
+      render();
+    } else if (action === "delete-ex-cancel"){
+      ui.confirmDeleteEx = null;
+      render();
+    } else if (action === "delete-ex-confirm"){
+      const dayId = t.getAttribute("data-day"), exId = t.getAttribute("data-ex");
+      const day = getDay(dayId);
+      day.esercizi = day.esercizi.filter(x => x.id !== exId);
+      ui.editEx.delete(exId); ui.openEx.delete(exId); ui.confirmDeleteEx = null;
+      persistDay(day);
+      render();
+    } else if (action === "delete-day"){
+      ui.confirmDeleteDay = t.getAttribute("data-day");
+      render();
+    } else if (action === "delete-day-cancel"){
+      ui.confirmDeleteDay = null;
+      render();
+    } else if (action === "delete-day-confirm"){
+      const dayId = t.getAttribute("data-day");
+      state.giorni = state.giorni.filter(g => g.id !== dayId);
+      persistDeleteDay(dayId);
+      ui.confirmDeleteDay = null;
+      if (ui.selectedDayId === dayId) ui.selectedDayId = null;
+      render();
+    } else if (action === "rename-day"){
+      ui.renamingDay = t.getAttribute("data-day");
+      render();
+    } else if (action === "cancel-rename-day"){
+      ui.renamingDay = null;
+      render();
+    } else if (action === "delete-hist"){
+      ui.confirmDeleteHist = t.getAttribute("data-hist");
+      render();
+    } else if (action === "delete-hist-cancel"){
+      ui.confirmDeleteHist = null;
+      render();
+    } else if (action === "delete-hist-confirm"){
+      const dayId = t.getAttribute("data-day"), exId = t.getAttribute("data-ex"), histId = t.getAttribute("data-hist");
+      const day = getDay(dayId);
+      const ex = getEx(dayId, exId);
+      ex.storico = ex.storico.filter(s => s.id !== histId);
+      ui.confirmDeleteHist = null;
+      persistDay(day);
+      render();
+    }
+  });
+
+  document.addEventListener("input", (e) => {
+    if (e.target.name === "carico" && e.target.closest("form[data-form='log-session']")){
+      const form = e.target.closest("form");
+      const hint = form.querySelector("[data-plate-hint]");
+      const val = parseFloat(e.target.value);
+      hint.textContent = val ? calcolaDischi(val) : "Inserisci il carico per vedere i dischi per lato";
+    }
+  });
+
+  document.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formType = form.getAttribute("data-form");
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    if (formType === "rename-day"){
+      const dayId = form.getAttribute("data-day");
+      const day = getDay(dayId);
+      const nuovo = data.nome.trim();
+      if (nuovo) day.nome = nuovo.slice(0,60);
+      ui.renamingDay = null;
+      persistDay(day);
+      render();
+    } else if (formType === "add-day"){
+      const maxOrdine = state.giorni.reduce((m,g) => Math.max(m,g.ordine), -1);
+      const nuovo = { id: uid("g"), nome: data.nome.trim().slice(0,60), ordine: maxOrdine+1, esercizi: [] };
+      state.giorni.push(nuovo);
+      ui.addDayOpen = false;
+      ui.selectedDayId = nuovo.id;
+      persistDay(nuovo);
+      render();
+    } else if (formType === "add-ex"){
+      const dayId = form.getAttribute("data-day");
+      const day = getDay(dayId);
+      day.esercizi.push({
+        id: uid("e"), nome: data.nome.trim().slice(0,60),
+        serieTarget: parseInt(data.serieTarget,10) || 1,
+        ripTarget: data.ripTarget.trim().slice(0,12),
+        note: "", storico: []
+      });
+      ui.addExFor = null;
+      persistDay(day);
+      render();
+    } else if (formType === "edit-ex"){
+      const dayId = form.getAttribute("data-day"), exId = form.getAttribute("data-ex");
+      const day = getDay(dayId), ex = getEx(dayId, exId);
+      ex.nome = data.nome.trim().slice(0,60);
+      ex.serieTarget = parseInt(data.serieTarget,10) || 1;
+      ex.ripTarget = data.ripTarget.trim().slice(0,12);
+      ex.note = (data.note || "").trim().slice(0,120);
+      ui.editEx.delete(exId);
+      persistDay(day);
+      render();
+    } else if (formType === "log-session"){
+      const dayId = form.getAttribute("data-day"), exId = form.getAttribute("data-ex");
+      const day = getDay(dayId), ex = getEx(dayId, exId);
+      ex.storico.push({
+        id: uid("s"),
+        data: data.data || todayISO(),
+        carico: parseFloat(data.carico),
+        serie: parseInt(data.serie,10),
+        ripetizioni: parseInt(data.ripetizioni,10),
+        rpe: data.rpe ? parseFloat(data.rpe) : null,
+        note: ""
+      });
+      persistDay(day);
+      render();
+    }
+  });
+
+  // ---- boot ----
+  function boot(){
+    state = loadLocal() || defaultState();
+    if (!loadLocal()) saveLocal();
+    render();
+    connectDb();
+  }
+
+  function connectDb(){
+    if (!window.claude || typeof window.claude.use !== "function") return;
+    window.claude.use("db").then(async (namespace) => {
+      if (!namespace) return;
+      db = namespace;
+      try{
+        const snap = await db.collection("giorni").get();
+        if (snap.empty){
+          for (const g of state.giorni){
+            await db.doc("giorni/" + g.id).set(g).catch(()=>{});
+          }
+        } else {
+          const remoteDays = snap.docs.map(d => d.data()).filter(Boolean);
+          remoteDays.sort((a,b) => (a.ordine||0) - (b.ordine||0));
+          state = { giorni: remoteDays };
+          saveLocal();
+          render();
+        }
+        dbReady = true;
+        db.collection("giorni").onSnapshot((qsnap) => {
+          const remoteDays = qsnap.docs.map(d => d.data()).filter(Boolean);
+          remoteDays.sort((a,b) => (a.ordine||0) - (b.ordine||0));
+          state = { giorni: remoteDays };
+          saveLocal();
+          render();
+        }, () => {});
+      }catch(err){}
+    }).catch(() => {});
+  }
+
+  let resizeTimer = null;
+  let wasNarrow = window.innerWidth <= 620;
+  window.addEventListener("resize", () => {
+    const narrow = window.innerWidth <= 620;
+    if (narrow === wasNarrow) return;
+    wasNarrow = narrow;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 150);
+  });
+
+  boot();
+})();
+</script>
+<script>
+  if ("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
