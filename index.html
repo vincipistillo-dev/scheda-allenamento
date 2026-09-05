@@ -667,6 +667,27 @@
       </div>`;
   }
 
+  // Chiudendo la tendina le modifiche in corso vengono salvate, non perse.
+  // Solo "Annulla" le scarta di proposito.
+  function salvaModificheAperte(){
+    const form = document.querySelector('form[data-form="edit-ex"]');
+    if (!form) return;
+    const dayId = form.getAttribute("data-day"), exId = form.getAttribute("data-ex");
+    const day = getDay(dayId), ex = getEx(dayId, exId);
+    if (!day || !ex) return;
+
+    const d = Object.fromEntries(new FormData(form).entries());
+    const nome = (d.nome || "").trim();
+    const rip = (d.ripTarget || "").trim();
+    if (nome) ex.nome = nome.slice(0,60);
+    if (rip) ex.ripTarget = rip.slice(0,12);
+    ex.serieTarget = parseInt(d.serieTarget,10) || ex.serieTarget;
+    ex.note = (d.note || "").trim().slice(0,120);
+
+    ui.editEx.delete(exId);
+    persistDay(day);
+  }
+
   // ---- event delegation ----
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-action]");
@@ -674,7 +695,9 @@
     const action = t.getAttribute("data-action");
 
     if (action === "select-day"){
+      salvaModificheAperte();
       ui.selectedDayId = t.getAttribute("data-day");
+      ui.openEx.clear();
       render();
     } else if (action === "toggle-add-day"){
       ui.addDayOpen = !ui.addDayOpen;
@@ -685,11 +708,20 @@
       render();
     } else if (action === "toggle-ex"){
       const id = t.getAttribute("data-ex");
-      if (ui.openEx.has(id)) ui.openEx.delete(id); else ui.openEx.add(id);
+      const eraAperto = ui.openEx.has(id);
+      salvaModificheAperte();
+      ui.openEx.clear();
+      if (!eraAperto) ui.openEx.add(id);
       render();
     } else if (action === "toggle-edit-ex"){
       const id = t.getAttribute("data-ex");
-      if (ui.editEx.has(id)) ui.editEx.delete(id); else { ui.editEx.add(id); ui.openEx.add(id); }
+      if (ui.editEx.has(id)){
+        ui.editEx.delete(id);
+      } else {
+        ui.editEx.add(id);
+        ui.openEx.clear();
+        ui.openEx.add(id);
+      }
       render();
     } else if (action === "delete-ex"){
       ui.confirmDeleteEx = t.getAttribute("data-ex");
