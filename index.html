@@ -193,19 +193,20 @@
     display:block; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase;
     letter-spacing:.06em; color:var(--ink-muted); margin-bottom:4px;
   }
+  /* min-width:0 impedisce agli input di sfondare la propria cella della griglia */
+  .field{ min-width:0; }
   .field input, .field textarea{
-    width:100%; font-family:var(--font-body); font-size:14px; padding:8px 10px;
+    width:100%; max-width:100%; font-family:var(--font-body); font-size:14px; padding:8px 10px;
     border:1px solid var(--line-strong); border-radius:10px; background:var(--surface-2); color:var(--ink);
   }
   .field.mono input{ font-family:var(--font-mono); }
   .edit-form-actions{ grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; }
 
   .log-form{
-    display:grid; grid-template-columns:repeat(5,1fr); gap:10px; align-items:end;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:10px; align-items:end;
     background:var(--accent-soft); border:1px solid var(--line); border-radius:16px; padding:16px;
     margin-bottom:18px;
   }
-  .log-form .field.wide{ grid-column:span 1; }
   .log-form .submit-cell{ grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .plate-hint{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-muted); }
 
@@ -272,7 +273,9 @@
     .ex-last{ grid-area:last; min-width:0; }
 
     .ex-body{ padding:14px; }
-    .edit-form, .log-form, .add-ex-form{ grid-template-columns:1fr 1fr; }
+    .edit-form, .add-ex-form{ grid-template-columns:1fr 1fr; }
+    .log-form{ grid-template-columns:repeat(3,1fr); gap:8px; padding:14px; }
+    .log-form .field label{ font-size:9.5px; letter-spacing:.03em; }
     .add-ex-form > div:last-child{ grid-column:1/-1; }
     .log-form .submit-cell{ flex-direction:column; align-items:stretch; }
     .log-form .submit-cell .btn{ width:100%; }
@@ -550,8 +553,9 @@
         ${ui.addExFor === day.id ? `
           <form class="add-ex-form" data-form="add-ex" data-day="${day.id}">
             <div class="field full"><label>Esercizio</label><input type="text" name="nome" placeholder="Nome esercizio" required maxlength="60"></div>
-            <div class="field"><label>Serie</label><input type="number" name="serieTarget" min="1" max="20" value="3" required></div>
+            <div class="field"><label>Serie</label><input type="number" name="serieTarget" min="1" max="20" inputmode="numeric" value="3" required></div>
             <div class="field"><label>Ripetizioni</label><input type="text" name="ripTarget" placeholder="es. 8-10" value="10" required maxlength="12"></div>
+            <div class="field full"><label>Note (opzionale)</label><input type="text" name="note" placeholder="es. presa larga, tempo 3-1-1" maxlength="120"></div>
             <div style="display:flex;gap:8px;">
               <button type="submit" class="btn primary small">Aggiungi</button>
               <button type="button" class="btn ghost small" data-action="toggle-add-ex" data-day="${day.id}">Annulla</button>
@@ -604,11 +608,9 @@
     const suggestedCarico = info ? info.last.carico : "";
     const logForm = `
       <form class="log-form" data-form="log-session" data-day="${day.id}" data-ex="${ex.id}">
-        <div class="field"><label>Data</label><input type="date" name="data" value="${todayISO()}" required></div>
-        <div class="field mono"><label>Carico (kg)</label><input type="number" name="carico" step="0.5" min="0" placeholder="${suggestedCarico || 0}" required></div>
-        <div class="field"><label>Serie</label><input type="number" name="serie" min="1" max="20" value="${ex.serieTarget}" required></div>
-        <div class="field"><label>Ripetizioni</label><input type="number" name="ripetizioni" min="1" max="100" placeholder="es. 8" required></div>
-        <div class="field"><label>RPE (opz.)</label><input type="number" name="rpe" min="1" max="10" step="0.5" placeholder="1-10"></div>
+        <div class="field mono"><label>Carico (kg)</label><input type="number" name="carico" step="0.5" min="0" inputmode="decimal" placeholder="${suggestedCarico || 0}" required></div>
+        <div class="field"><label>Serie</label><input type="number" name="serie" min="1" max="20" inputmode="numeric" value="${ex.serieTarget}" required></div>
+        <div class="field"><label>Ripetizioni</label><input type="number" name="ripetizioni" min="1" max="100" inputmode="numeric" placeholder="es. 8" required></div>
         <div class="submit-cell">
           <span class="plate-hint" data-plate-hint>Inserisci il carico per vedere i dischi per lato</span>
           <button type="submit" class="btn primary small">Registra sessione</button>
@@ -624,8 +626,6 @@
           <td>${fmtDate(s.data)}</td>
           <td>${s.carico} kg</td>
           <td>${s.serie}×${s.ripetizioni}</td>
-          <td>${s.rpe ? s.rpe : "—"}</td>
-          <td class="note">${esc(s.note || "")}</td>
           <td class="actions">${
             ui.confirmDeleteHist === s.id
               ? `<button class="btn small danger" data-action="delete-hist-confirm" data-day="${day.id}" data-ex="${ex.id}" data-hist="${s.id}">Conferma</button>
@@ -636,7 +636,7 @@
       histBlock = `
         <div class="hist-wrap">
           <table class="hist">
-            <thead><tr><th>Data</th><th>Carico</th><th>Serie×Rip</th><th>RPE</th><th>Note</th><th></th></tr></thead>
+            <thead><tr><th>Data</th><th>Carico</th><th>Serie×Rip</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>`;
@@ -773,7 +773,7 @@
         id: uid("e"), nome: data.nome.trim().slice(0,60),
         serieTarget: parseInt(data.serieTarget,10) || 1,
         ripTarget: data.ripTarget.trim().slice(0,12),
-        note: "", storico: []
+        note: (data.note || "").trim().slice(0,120), storico: []
       });
       ui.addExFor = null;
       persistDay(day);
@@ -793,12 +793,10 @@
       const day = getDay(dayId), ex = getEx(dayId, exId);
       ex.storico.push({
         id: uid("s"),
-        data: data.data || todayISO(),
+        data: todayISO(),
         carico: parseFloat(data.carico),
         serie: parseInt(data.serie,10),
-        ripetizioni: parseInt(data.ripetizioni,10),
-        rpe: data.rpe ? parseFloat(data.rpe) : null,
-        note: ""
+        ripetizioni: parseInt(data.ripetizioni,10)
       });
       persistDay(day);
       render();
