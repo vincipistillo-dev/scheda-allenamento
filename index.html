@@ -182,7 +182,8 @@
   .ex-body{ border-top:1px solid var(--line); padding:16px; display:none; }
   .ex-card.open .ex-body{ display:block; }
 
-  .ex-actions-row{ display:flex; justify-content:flex-end; gap:6px; margin-bottom:14px; }
+  .ex-edit-btn{ flex:none; border:1px solid var(--line-strong); color:var(--ink-muted); }
+  .ex-edit-btn:hover{ color:var(--accent); border-color:var(--accent); }
 
   .edit-form{
     display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:16px;
@@ -264,14 +265,15 @@
       display:grid; align-items:start;
       grid-template-columns:16px minmax(0,1fr) auto;
       grid-template-areas:
-        "chev name last"
-        ".    target target";
-      column-gap:12px; row-gap:4px; padding:14px 14px;
+        "chev name   last"
+        ".    target edit";
+      column-gap:12px; row-gap:6px; padding:14px 14px;
     }
     .chevron{ grid-area:chev; margin-top:6px; }
     .ex-name{ grid-area:name; font-size:19px; }
-    .ex-target{ grid-area:target; justify-self:start; }
+    .ex-target{ grid-area:target; justify-self:start; align-self:center; }
     .ex-last{ grid-area:last; min-width:0; }
+    .ex-edit-btn{ grid-area:edit; justify-self:end; }
 
     .ex-body{ padding:14px; }
     .edit-form, .add-ex-form{ grid-template-columns:1fr 1fr; }
@@ -650,11 +652,9 @@
           <div class="ex-name">${esc(ex.nome)}${ex.note ? `<span class="sub">${esc(ex.note)}</span>` : ""}</div>
           <div class="ex-target">${ex.serieTarget}×${esc(ex.ripTarget)}</div>
           <div class="ex-last">${lastBlock}</div>
+          ${open ? `<button class="btn ghost small ex-edit-btn" data-action="toggle-edit-ex" data-ex="${ex.id}">${editing ? "Annulla" : "Modifica"}</button>` : ""}
         </div>
         <div class="ex-body">
-          <div class="ex-actions-row">
-            <button class="btn ghost small" data-action="toggle-edit-ex" data-ex="${ex.id}">${editing ? "Annulla modifica" : "Modifica esercizio"}</button>
-          </div>
           ${editHtml}
           ${editing ? "" : logForm}
           ${chartBlock}
