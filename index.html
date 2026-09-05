@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0E0C0A">
 <meta name="description" content="Diario di carichi, serie e progressioni">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -84,6 +84,8 @@
   }
 
   *{ box-sizing:border-box; }
+  /* consente lo scorrimento ma non il pizzico per zoomare né il doppio tocco */
+  html{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; }
   body{
     margin:0;
     background:var(--ground);
@@ -276,6 +278,8 @@
     .ex-edit-btn{ grid-area:edit; justify-self:end; }
 
     .ex-body{ padding:14px; }
+    /* 16px è la soglia sotto cui iOS ingrandisce la pagina al tocco su un campo */
+    .field input, .field textarea, .add-day-form input, .rename-day-form input{ font-size:16px; }
     .edit-form, .add-ex-form{ grid-template-columns:1fr 1fr; }
     .log-form{ grid-template-columns:repeat(3,1fr); gap:8px; padding:14px; }
     .log-form .field label{ font-size:9.5px; letter-spacing:.03em; }
@@ -841,6 +845,11 @@
       }catch(err){}
     }).catch(() => {});
   }
+
+  // Safari ignora user-scalable=no: gli eventi gesture sono l'unico modo di fermare il pizzico
+  ["gesturestart","gesturechange","gestureend"].forEach((evt) => {
+    document.addEventListener(evt, (e) => e.preventDefault(), { passive:false });
+  });
 
   let resizeTimer = null;
   let wasNarrow = window.innerWidth <= 620;
