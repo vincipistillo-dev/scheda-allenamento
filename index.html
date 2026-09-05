@@ -209,6 +209,7 @@
   }
   .log-form .submit-cell{ grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .plate-hint{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-muted); }
+  .plate-hint:empty{ display:none; }
 
   .chart-wrap{ margin-bottom:16px; }
   .chart-wrap svg{ width:100%; height:auto; display:block; }
@@ -612,7 +613,7 @@
         <div class="field"><label>Serie</label><input type="number" name="serie" min="1" max="20" inputmode="numeric" value="${ex.serieTarget}" required></div>
         <div class="field"><label>Ripetizioni</label><input type="number" name="ripetizioni" min="1" max="100" inputmode="numeric" placeholder="es. 8" required></div>
         <div class="submit-cell">
-          <span class="plate-hint" data-plate-hint>Inserisci il carico per vedere i dischi per lato</span>
+          <span class="plate-hint" data-plate-hint></span>
           <button type="submit" class="btn primary small">Registra sessione</button>
         </div>
       </form>`;
@@ -655,7 +656,7 @@
             <button class="btn ghost small" data-action="toggle-edit-ex" data-ex="${ex.id}">${editing ? "Annulla modifica" : "Modifica esercizio"}</button>
           </div>
           ${editHtml}
-          ${logForm}
+          ${editing ? "" : logForm}
           ${chartBlock}
           ${histBlock}
         </div>
@@ -740,7 +741,7 @@
       const form = e.target.closest("form");
       const hint = form.querySelector("[data-plate-hint]");
       const val = parseFloat(e.target.value);
-      hint.textContent = val ? calcolaDischi(val) : "Inserisci il carico per vedere i dischi per lato";
+      hint.textContent = val ? calcolaDischi(val) : "";
     }
   });
 
