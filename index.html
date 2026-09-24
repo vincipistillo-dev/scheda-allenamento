@@ -281,6 +281,10 @@
     background:transparent; border-color:var(--line-strong); color:var(--ink-faint); font-size:17px;
   }
   .btn-piu.rimuovi:hover{ border-color:var(--accent); color:var(--accent); background:transparent; }
+  /* il contenitore delle righe superset attraversa tutta la griglia e, da vuoto,
+     non deve occupare una cella: altrimenti sfasa i campi che seguono */
+  .movimenti-extra{ grid-column:1/-1; }
+  .movimenti-extra:empty{ display:none; }
   .riga-movimento{ margin-top:10px; }
   .ss-piu{ color:var(--accent); font-weight:700; margin:0 7px; }
   .ss-tag{
