@@ -85,7 +85,8 @@
 
   *{ box-sizing:border-box; }
   /* consente lo scorrimento ma non il pizzico per zoomare né il doppio tocco */
-  html{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; }
+  /* light dark = anche i controlli nativi (tastierini, barre) seguono il tema di sistema */
+  html{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; color-scheme:light dark; }
   body{
     margin:0;
     background:var(--ground);
@@ -99,7 +100,8 @@
     *{ transition:none !important; animation:none !important; }
   }
 
-  .shell{ max-width:820px; margin:0 auto; padding:28px 20px 80px; }
+  /* spazio in fondo perché il cronometro non copra l'ultimo pulsante */
+  .shell{ max-width:820px; margin:0 auto; padding:28px 20px 100px; }
 
   header.top{
     display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
@@ -150,7 +152,35 @@
     outline:2px solid var(--accent); outline-offset:2px;
   }
 
-  .day-header-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; }
+  /* card del giorno: un fuoco visivo in cima, con un alone caldo verso l'accento */
+  .day-card{
+    background:
+      radial-gradient(120% 140% at 0% 0%, var(--accent-soft) 0%, transparent 58%),
+      var(--surface);
+    border:1px solid var(--line); border-radius:22px; padding:18px 18px 16px;
+    margin-bottom:18px; box-shadow:var(--shadow);
+  }
+  .eyebrow{
+    display:block; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+  }
+  .day-title{ font-family:var(--font-display); font-weight:800; font-size:26px; line-height:1; }
+  .day-stats{
+    display:flex; gap:20px; flex-wrap:wrap; align-items:baseline;
+    margin-top:14px; font-size:12px; color:var(--ink-muted);
+  }
+  .stat{ display:inline-flex; align-items:baseline; gap:7px; }
+  .stat + .stat{ padding-left:20px; border-left:1px solid var(--line); }
+  .stat-n{ font-family:var(--font-mono); font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+
+  .day-header-row{ display:flex; align-items:center; justify-content:flex-start; margin-bottom:0; gap:8px; flex-wrap:wrap; }
+  .day-azioni{ display:flex; gap:4px; flex:none; }
+  .btn-icona{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; padding:0; border-radius:9px; cursor:pointer;
+    background:transparent; border:1px solid transparent; color:var(--ink-faint);
+  }
+  .btn-icona:hover{ color:var(--accent); border-color:var(--line-strong); }
   .day-name-edit{ display:flex; align-items:center; gap:8px; }
   .day-name-edit input{
     font-family:var(--font-display); font-weight:700; font-size:19px; padding:4px 8px;
@@ -178,8 +208,16 @@
     font-family:var(--font-mono); font-size:10px; letter-spacing:.05em; font-weight:600;
     background:var(--good-soft); color:var(--good); border-radius:99px; padding:2px 7px; margin-top:3px;
   }
-  .chevron{ flex:none; color:var(--ink-faint); transition:transform .15s ease; }
-  .ex-card.open .chevron{ transform:rotate(90deg); }
+  .ex-thumb{
+    display:inline-flex; align-items:center; justify-content:center; flex:none;
+    width:46px; height:46px; border-radius:13px; overflow:hidden;
+    background:var(--surface-2); border:1px solid var(--line);
+  }
+  .ex-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .ex-num{
+    font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--ink-faint);
+  }
+  .ex-card.open .ex-thumb{ border-color:var(--accent); }
 
   .ex-body{ border-top:1px solid var(--line); padding:16px; display:none; }
   .ex-card.open .ex-body{ display:block; }
@@ -213,6 +251,46 @@
   .log-form .submit-cell{ grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .plate-hint{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-muted); }
   .plate-hint:empty{ display:none; }
+
+  /* superset: ogni movimento ha il proprio riquadro con carico e ripetizioni */
+  .log-form.superset{ grid-template-columns:1fr; gap:12px; }
+  .ss-parte{
+    display:flex; flex-direction:column; gap:8px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px;
+  }
+  .ss-nome{
+    display:flex; align-items:center; gap:8px;
+    font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--ink);
+  }
+  .ss-num{
+    display:inline-flex; align-items:center; justify-content:center; flex:none;
+    width:20px; height:20px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+    font-family:var(--font-mono); font-size:11px; font-weight:600;
+  }
+  .ss-campi{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .log-form.superset .ss-serie{ max-width:160px; }
+  .campo-con-piu{ display:flex; gap:6px; align-items:center; }
+  .campo-con-piu input{ flex:1; min-width:0; }
+  .btn-piu{
+    flex:none; width:38px; height:38px; border-radius:11px; cursor:pointer;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent);
+    font-size:19px; line-height:1; font-weight:600;
+  }
+  .btn-piu:hover{ background:var(--accent); color:var(--accent-ink); }
+  .btn-piu.rimuovi{
+    background:transparent; border-color:var(--line-strong); color:var(--ink-faint); font-size:17px;
+  }
+  .btn-piu.rimuovi:hover{ border-color:var(--accent); color:var(--accent); background:transparent; }
+  .riga-movimento{ margin-top:10px; }
+  .ss-piu{ color:var(--accent); font-weight:700; margin:0 7px; }
+  .ss-tag{
+    display:inline-block; vertical-align:middle; margin-left:8px;
+    font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--accent); background:var(--accent-soft);
+    border-radius:99px; padding:3px 8px;
+  }
+  .storico-toggle{ width:100%; margin-top:10px; color:var(--ink-muted); }
+  .storico-toggle:hover{ color:var(--accent); }
 
   .chart-wrap{ margin-bottom:16px; }
   .chart-wrap svg{ width:100%; height:auto; display:block; }
@@ -252,26 +330,68 @@
   .confirm-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
   .confirm-row span{ font-size:12.5px; color:var(--ink-muted); }
 
+  /* cronometro fluttuante: resta sopra al contenuto e sopra la tacca dell'iPhone */
+  .crono-bolla{
+    position:fixed; right:16px; z-index:50;
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+    min-width:52px; height:52px; padding:0 16px; border-radius:99px; cursor:pointer;
+    background:var(--accent); color:var(--accent-ink); border:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+    font-family:var(--font-mono); font-size:16px; font-weight:600; font-variant-numeric:tabular-nums;
+  }
+  .crono-bolla:hover{ filter:brightness(1.08); }
+  .crono-bolla.in-corso{ animation:crono-pulsa 2s ease-in-out infinite; }
+  @keyframes crono-pulsa{
+    0%,100%{ box-shadow:0 6px 20px rgba(0,0,0,.35); }
+    50%{ box-shadow:0 6px 26px var(--accent-soft), 0 0 0 4px var(--accent-soft); }
+  }
+
+  .crono-riquadro{
+    position:fixed; right:16px; z-index:51;
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    width:190px; padding:14px;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:18px;
+    box-shadow:0 10px 32px rgba(0,0,0,.45);
+  }
+  .crono-testa{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .crono-etichetta{
+    font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent);
+  }
+  .crono-chiudi{
+    display:inline-flex; padding:4px; border-radius:7px; cursor:pointer;
+    background:transparent; border:none; color:var(--ink-faint);
+  }
+  .crono-chiudi:hover{ color:var(--accent); }
+  .crono-tempo{
+    font-family:var(--font-mono); font-size:34px; font-weight:600; line-height:1.1;
+    font-variant-numeric:tabular-nums; margin-bottom:10px; color:var(--ink);
+  }
+  .crono-azioni{ display:flex; gap:8px; }
+  .crono-azioni .btn{ flex:1; }
+  @media (prefers-reduced-motion: reduce){ .crono-bolla.in-corso{ animation:none; } }
+
   .empty-state{
     text-align:center; padding:60px 20px; color:var(--ink-muted);
   }
   .empty-state h2{ font-family:var(--font-display); font-size:26px; color:var(--ink); margin:0 0 8px; }
 
   @media (max-width:620px){
-    .shell{ padding:20px 14px 64px; }
+    .shell{ padding:20px 14px 96px; }
     .brand h1{ font-size:30px; }
     header.top{ flex-direction:column; align-items:flex-start; padding-bottom:16px; margin-bottom:18px; }
 
     /* exercise row: name on its own line, target and last load below it */
     .ex-head{
       display:grid; align-items:start;
-      grid-template-columns:16px minmax(0,1fr) auto;
+      grid-template-columns:46px minmax(0,1fr) auto;
       grid-template-areas:
         "chev name   last"
         ".    target edit";
       column-gap:12px; row-gap:6px; padding:14px 14px;
     }
-    .chevron{ grid-area:chev; margin-top:6px; }
+    .ex-thumb{ grid-area:chev; }
     .ex-name{ grid-area:name; font-size:19px; }
     .ex-target{ grid-area:target; justify-self:start; align-self:center; }
     .ex-last{ grid-area:last; min-width:0; }
@@ -291,7 +411,7 @@
 
     .day-header-row{ flex-wrap:wrap; }
     .day-header-row > div{ flex-wrap:wrap; }
-    .day-name-edit{ min-width:0; flex:1 1 100%; }
+    .day-name-edit{ min-width:0; }
     .rename-day-form{ flex-wrap:wrap; }
     .rename-day-form input{ flex:1 1 100%; min-width:0; font-size:18px; }
     .confirm-row{ justify-content:flex-start; }
@@ -320,6 +440,28 @@
   <div id="addDayZone"></div>
 
   <main id="dayPanel"></main>
+</div>
+
+<!-- cronometro: vive fuori dalla pagina che si ridisegna, così non perde mai il conteggio -->
+<button class="crono-bolla" id="cronoBolla" aria-label="Apri il cronometro">
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <circle cx="12" cy="13.5" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M12 9.8v3.7l2.4 1.6M9.4 2.5h5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+</button>
+
+<div class="crono-riquadro" id="cronoRiquadro" hidden>
+  <div class="crono-testa">
+    <span class="crono-etichetta">Recupero</span>
+    <button class="crono-chiudi" id="cronoChiudi" aria-label="Chiudi il cronometro">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="crono-tempo" id="cronoTempo">0:00</div>
+  <div class="crono-azioni">
+    <button class="btn primary small" id="cronoAvvia">Avvia</button>
+    <button class="btn small" id="cronoAzzera">Azzera</button>
+  </div>
 </div>
 
 <script>
@@ -380,7 +522,8 @@
   let state = null;
   let ui = {
     selectedDayId:null, openEx:new Set(), editEx:new Set(), addExFor:null, addDayOpen:false,
-    renamingDay:null, confirmDeleteDay:null, confirmDeleteEx:null, confirmDeleteHist:null
+    renamingDay:null, confirmDeleteDay:null, confirmDeleteEx:null, confirmDeleteHist:null,
+    storicoEspanso:new Set()
   };
   let db = null;
   let dbReady = false;
@@ -393,7 +536,20 @@
     return null;
   }
   function saveLocal(){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){
+      // memoria piena: gli allenamenti valgono più delle immagini, quindi si salva senza
+      try{
+        const senzaImmagini = {
+          giorni: state.giorni.map(g => ({
+            ...g,
+            esercizi: g.esercizi.map(({ immagine, ...resto }) => resto)
+          }))
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(senzaImmagini));
+      }catch(e2){}
+    }
   }
 
   function getDay(dayId){ return state.giorni.find(g => g.id === dayId); }
@@ -429,13 +585,278 @@
     return parts.join(" + ") + " per lato (bilanciere 20 kg)";
   }
 
+  // ---- immagini degli esercizi ----
+  // L'indice locale (immagini-esercizi.json) contiene nomi inglesi: questo vocabolario
+  // porta i termini da palestra italiani sul loro equivalente, così l'abbinamento regge.
+  const VOCABOLARIO = {
+    "panca":"bench press", "piana":"barbell", "inclinata":"incline", "declinata":"decline",
+    "squat":"squat", "stacco":"deadlift", "stacchi":"deadlift", "rumeno":"romanian",
+    "trazioni":"pull-up", "trazione":"pull-up", "sbarra":"pull-up",
+    "rematore":"bent over row", "pulley":"seated cable row",
+    "lat":"lat pulldown", "machine":"machine", "pulldown":"pulldown",
+    "curl":"curl", "bicipiti":"biceps", "tricipiti":"triceps",
+    "french":"lying triceps extension", "press":"press",
+    "pushdown":"triceps pushdown", "push-down":"triceps pushdown",
+    "dip":"dips", "dips":"dips", "parallele":"dips",
+    "croci":"flyes", "aperture":"flyes",
+    "alzate":"lateral raise", "laterali":"lateral raise", "frontali":"front raise",
+    "military":"military press", "lento":"shoulder press", "spinte":"press",
+    "affondi":"lunge", "affondo":"lunge", "bulgari":"bulgarian split squat",
+    "pressa":"leg press", "leg":"leg", "extension":"extension",
+    "femorali":"leg curl", "quadricipiti":"leg extension",
+    "polpacci":"calf raise", "calf":"calf raise",
+    "addominali":"crunch", "crunch":"crunch", "plank":"plank",
+    "manubri":"dumbbell", "manubrio":"dumbbell", "bilanciere":"barbell",
+    "cavi":"cable", "cavo":"cable", "macchina":"machine", "corpo":"body",
+    "scrollate":"shrug", "shrug":"shrug", "face":"face pull",
+    "hip":"hip thrust", "thrust":"hip thrust", "pullover":"pullover",
+    "arnold":"arnold press", "goblet":"goblet squat", "sumo":"sumo",
+    "hack":"hack squat", "presa":"grip", "inversa":"reverse", "larga":"wide", "stretta":"close",
+    "piedi":"standing", "seduto":"seated", "seduta":"seated", "sdraiato":"lying",
+    "terra":"lying", "panca45":"incline", "verticale":"standing"
+  };
+  // senza un movimento riconosciuto non abbiniamo nulla: meglio nessuna immagine che una sbagliata
+  const MOVIMENTI = new Set(["bench","press","squat","deadlift","pull-up","row","pulldown","curl",
+    "triceps","biceps","dips","flyes","raise","lunge","extension","crunch","plank","shrug",
+    "pullover","thrust","pushdown","pull"]);
+  const ATTREZZI = ["barbell","dumbbell","cable","machine","kettlebells"];
+  const POSTURE = ["standing","seated","lying","incline","decline","kneeling"];
+  // varianti che nessuno intende se non le nomina: evitano "panca piana" -> "guillotine press"
+  const VARIANTI = new Set(["guillotine","axle","scapular","ball","arnold","smith","band","bands",
+    "kettlebell","kettlebells","suspended","sled","landmine","zercher","jefferson","deficit",
+    "isometric","negative","partial","assisted","weighted","alternating","clean","snatch","jump",
+    "plyo","bosu","swiss","trap","hack","sumo","goblet","bulgarian","pistol","frog","spider",
+    "preacher","concentration","drag","reverse","hammer","zottman","21s","burnout",
+    "close-grip","wide-grip","rear","behind","bench","one-arm","single-arm"]);
+
+  // Corrispondenze esatte per gli esercizi che compaiono in quasi ogni scheda italiana:
+  // qui la ricerca a punteggio sbagliava variante (panca piana -> declinata, dip -> agli anelli).
+  // Ordine importante: vince la prima riga le cui parole sono tutte presenti nel nome.
+  const CORRISPONDENZE = [
+    [["panca","inclinata","manubri"], "incline dumbbell press"],
+    [["panca","inclinata"],           "barbell incline bench press - medium grip"],
+    [["panca","manubri"],             "dumbbell bench press"],
+    [["panca"],                       "barbell bench press - medium grip"],
+    [["military","manubri"],          "dumbbell shoulder press"],
+    [["military"],                    "barbell shoulder press"],
+    [["lento","manubri"],             "dumbbell shoulder press"],
+    [["lento"],                       "barbell shoulder press"],
+    [["spalle","manubri"],            "dumbbell shoulder press"],
+    [["dip"],                         "dips - triceps version"],
+    [["parallele"],                   "dips - triceps version"],
+    [["trazioni"],                    "pullups"],
+    [["stacco"],                      "barbell deadlift"],
+    [["squat"],                       "barbell squat"],
+    [["affondi","manubri"],           "dumbbell lunges"],
+    [["affondi"],                     "barbell lunge"],
+    [["leg","curl"],                  "lying leg curls"],
+    [["femorali"],                    "lying leg curls"],
+    [["leg","extension"],             "leg extensions"],
+    [["quadricipiti"],                "leg extensions"],
+    [["leg","press"],                 "leg press"],
+    [["pressa"],                      "leg press"],
+    [["calf","seduto"],               "seated calf raise"],
+    [["calf"],                        "standing calf raises"],
+    [["polpacci"],                    "standing calf raises"],
+    [["croci","manubri"],             "dumbbell flyes"],
+    [["croci"],                       "flat bench cable flyes"],
+    [["lat","machine"],               "wide-grip lat pulldown"],
+    [["lat","pulldown"],              "wide-grip lat pulldown"],
+    [["rematore"],                    "bent over barbell row"],
+    [["curl","manubri"],              "dumbbell bicep curl"],
+    [["curl"],                        "barbell curl"],
+    [["french"],                      "lying triceps press"],
+    [["pushdown"],                    "triceps pushdown"],
+    [["push-down"],                   "triceps pushdown"],
+    [["crunch"],                      "crunches"],
+    [["addominali"],                  "crunches"],
+    [["plank"],                       "plank"],
+    [["hip","thrust"],                "barbell hip thrust"],
+    [["shrug"],                       "barbell shrug"],
+    [["scrollate"],                   "barbell shrug"],
+    [["pullover"],                    "straight-arm dumbbell pullover"],
+    [["face","pull"],                 "face pull"],
+    [["alzate","laterali"],           "side lateral raise"]
+  ];
+
+  let indiceImmagini = null;
+  const BASE_IMG = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/";
+
+  function parole(testo){
+    return String(testo || "").toLowerCase()
+      .replace(/[^a-zàèéìòù0-9\s-]/g, " ")
+      .split(/\s+/).filter(Boolean);
+  }
+
+  function traduci(nomeItaliano){
+    const fuori = [];
+    for (const p of parole(nomeItaliano)){
+      const t = VOCABOLARIO[p];
+      if (t) fuori.push(...t.split(" "));
+      else if (/^[a-z-]+$/.test(p) && p.length > 2) fuori.push(p); // termini già inglesi
+    }
+    return [...new Set(fuori)];
+  }
+
+  function cercaImmagine(nomeItaliano){
+    if (!indiceImmagini) return null;
+
+    // prima le corrispondenze certe
+    const testo = " " + String(nomeItaliano || "").toLowerCase() + " ";
+    for (const [chiavi, nomeCatalogo] of CORRISPONDENZE){
+      if (chiavi.every(k => testo.includes(k))){
+        const voce = indiceImmagini.find(v => v[0] === nomeCatalogo);
+        if (voce) return { url: BASE_IMG + voce[1], fonte: voce[0] };
+      }
+    }
+
+    const query = traduci(nomeItaliano);
+    if (!query.some(t => MOVIMENTI.has(t))) return null;
+
+    const attrezzoChiesto = ATTREZZI.find(a => query.includes(a));
+    const posturaChiesta = POSTURE.find(p => query.includes(p));
+
+    let migliore = null, punteggioMigliore = -Infinity;
+    for (const [nome, file, attrezzo] of indiceImmagini){
+      const token = nome.split(/[^a-z0-9-]+/).filter(Boolean);
+      // il movimento deve combaciare: è questo a evitare accostamenti insensati
+      if (!query.some(q => MOVIMENTI.has(q) && token.includes(q))) continue;
+
+      let presi = 0;
+      for (const q of query) if (token.includes(q)) presi++;
+      let punteggio = presi * 2 - (token.length - presi) * 0.3;
+
+      // l'attrezzo giusto vale più di qualsiasi parola in comune
+      if (attrezzoChiesto) punteggio += (attrezzo === attrezzoChiesto) ? 2.5 : -1.5;
+
+      // "in piedi" non deve finire su "seated"
+      const posturaNome = POSTURE.find(p => token.includes(p));
+      if (posturaChiesta) punteggio += (posturaNome === posturaChiesta) ? 2 : -2;
+      else if (posturaNome) punteggio -= 0.5;
+
+      // varianti particolari: le vogliamo solo se chieste esplicitamente
+      for (const v of token) if (VARIANTI.has(v) && !query.includes(v)) punteggio -= 3;
+
+      if (punteggio > punteggioMigliore){ punteggioMigliore = punteggio; migliore = [file, nome]; }
+    }
+    return migliore ? { url: BASE_IMG + migliore[0], fonte: migliore[1] } : null;
+  }
+
+  // scarica l'immagine e la salva dentro l'app, così resta anche senza campo in palestra
+  function scaricaComeDati(url){
+    return new Promise((risolvi, rifiuta) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try{
+          const lato = 220;
+          const c = document.createElement("canvas");
+          c.width = lato; c.height = lato;
+          const ctx = c.getContext("2d");
+          const min = Math.min(img.width, img.height);
+          ctx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, lato, lato);
+          risolvi(c.toDataURL("image/jpeg", 0.72));
+        }catch(e){ rifiuta(e); }
+      };
+      img.onerror = rifiuta;
+      img.src = url;
+    });
+  }
+
+  async function assegnaImmagine(day, ex){
+    if (ex.immagine || ex.immagineCercata) return;
+    ex.immagineCercata = true;               // un solo tentativo per esercizio
+    const trovata = cercaImmagine(ex.nome);
+    if (!trovata){ persistDay(day); return; }
+    ex.immagineFonte = trovata.fonte;        // a quale esercizio del catalogo corrisponde
+    try{
+      ex.immagine = await scaricaComeDati(trovata.url);
+    }catch(e){
+      ex.immagine = trovata.url;             // se la conversione non riesce, resta il link
+    }
+    persistDay(day);
+    render();
+  }
+
+  async function caricaIndiceImmagini(){
+    if (indiceImmagini) return;
+    try{
+      const r = await fetch("./immagini-esercizi.json");
+      indiceImmagini = await r.json();
+    }catch(e){ indiceImmagini = null; }      // artifact o offline: si prosegue senza immagini
+  }
+
+  // completa gli esercizi già esistenti che non hanno ancora un'immagine
+  async function recuperaImmaginiMancanti(){
+    await caricaIndiceImmagini();
+    if (!indiceImmagini) return;
+    for (const day of state.giorni){
+      for (const ex of day.esercizi){
+        if (!ex.immagine && !ex.immagineCercata){
+          await assegnaImmagine(day, ex);
+        }
+      }
+    }
+  }
+
   // ---- progression helpers ----
+
+  // Un superset salva le sue parti in s.parti; un esercizio normale ha s.carico.
+  // Progressione, PR e grafico seguono sempre il primo movimento.
+  function caricoPrincipale(s){
+    if (s.parti && s.parti.length) return s.parti[0].carico;
+    return s.carico;
+  }
+  function ripetizioniTeste(s){
+    if (s.parti && s.parti.length) return s.parti.map(p => p.ripetizioni).join(" / ");
+    return s.ripetizioni;
+  }
+  function caricoTesto(s){
+    if (s.parti && s.parti.length) return s.parti.map(p => p.carico).join(" / ") + " kg";
+    return s.carico + " kg";
+  }
+  function eSuperset(ex){ return !!(ex.parti && ex.parti.length > 1); }
+
+  // "8 - 10" e "8-10" diventano entrambi "8-10"; un numero singolo resta tale
+  function normalizzaRip(valore){
+    return String(valore || "").replace(/\s+/g, "").slice(0,9);
+  }
+
+  // Riga aggiuntiva del superset, creata dal "+" accanto al nome.
+  function rigaMovimento(valore){
+    return `<div class="field full riga-movimento">
+      <label>In superset con</label>
+      <div class="campo-con-piu">
+        <input type="text" name="nomeExtra" value="${esc(valore || "")}" placeholder="Nome esercizio" maxlength="60">
+        <button type="button" class="btn-piu rimuovi" data-action="rimuovi-movimento" title="Togli">×</button>
+      </div>
+    </div>`;
+  }
+
+  // Con uno o più movimenti aggiuntivi l'esercizio diventa un superset; senza torna singolo.
+  // Lo storico già registrato non viene toccato: ogni sessione si legge dal proprio formato.
+  function applicaSuperset(ex, nomiExtra){
+    const extra = (nomiExtra || [])
+      .map(n => String(n || "").trim().slice(0,60))
+      .filter(Boolean);
+    if (extra.length){
+      ex.parti = [{ nome: ex.nome }, ...extra.map(n => ({ nome: n }))];
+    } else {
+      delete ex.parti;
+    }
+  }
+
+  // legge il nome principale e tutti gli eventuali movimenti aggiuntivi di un modulo
+  function nomiExtraDi(form){
+    return new FormData(form).getAll("nomeExtra");
+  }
+
   function ultimiDati(storico){
     if (!storico.length) return null;
     const sorted = [...storico].sort((a,b) => a.data.localeCompare(b.data));
     const last = sorted[sorted.length - 1];
     const prev = sorted.length > 1 ? sorted[sorted.length - 2] : null;
-    const pr = Math.max(...sorted.map(s => s.carico));
+    const pr = Math.max(...sorted.map(caricoPrincipale));
     return { last, prev, pr, sorted };
   }
 
@@ -443,43 +864,73 @@
     // narrow viewBox on phones so labels don't shrink when the SVG scales to the card
     const narrow = window.innerWidth <= 620;
     const w = narrow ? 320 : 560;
-    const h = narrow ? 175 : 130;
-    const padL = narrow ? 34 : 40, padR = 14, padT = 18, padB = 26;
-    const values = sorted.map(s => s.carico);
+    const h = narrow ? 170 : 150;
+    // a destra resta spazio per l'etichetta del carico attuale, a sinistra per la scala
+    const padL = narrow ? 34 : 42, padR = narrow ? 52 : 60, padT = 22, padB = 28;
+    const values = sorted.map(caricoPrincipale);
     const min = Math.min(...values), max = Math.max(...values);
-    const span = (max - min) || 1;
+    const piatto = max === min;
     const innerW = w - padL - padR, innerH = h - padT - padB;
+
+    // con un solo valore, o valori tutti uguali, la linea sta a metà invece che sul fondo
+    const y = (v) => piatto ? padT + innerH/2 : padT + innerH - ((v - min)/(max - min)) * innerH;
     const pts = sorted.map((s,i) => {
+      const c = caricoPrincipale(s);
       const x = padL + (sorted.length === 1 ? innerW/2 : (i/(sorted.length-1)) * innerW);
-      const y = padT + innerH - ((s.carico - min)/span) * innerH;
-      return { x, y, carico:s.carico, data:s.data };
+      return { x, y: y(c), carico:c, data:s.data };
     });
+    const baseY = padT + innerH;
     const poly = pts.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
-    const prVal = max;
-    let circles = pts.map((p,i) => {
-      const isPR = p.carico === prVal;
-      const isLast = i === pts.length - 1;
-      const r = isLast ? 5 : 3.2;
-      const cls = isPR ? "pt pt-pr" : "pt";
-      return `<circle class="${cls}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}"></circle>`;
+    // area sotto la linea: dà corpo al grafico senza aggiungere inchiostro forte
+    const area = `M ${pts[0].x.toFixed(1)},${baseY} L ${poly.split(" ").join(" L ")} L ${pts[pts.length-1].x.toFixed(1)},${baseY} Z`;
+
+    const last = pts[pts.length-1], first = pts[0];
+    const iPR = values.indexOf(max);
+    const prSeparato = iPR !== pts.length - 1;   // il record non è l'ultima sessione
+
+    const punti = pts.map((p,i) => {
+      const ultimo = i === pts.length - 1;
+      return `<circle class="${ultimo ? "pt pt-ultimo" : "pt"}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${ultimo ? 4.5 : 3}"></circle>`;
     }).join("");
-    const first = pts[0], last = pts[pts.length-1];
-    return `<svg viewBox="0 0 ${w} ${h}" class="sparkline" role="img" aria-label="Andamento del carico">
+
+    // etichette scelte: solo i valori che servono davvero, mai un numero su ogni punto
+    const etichettaUltimo = `<text class="valore" x="${(last.x + 9).toFixed(1)}" y="${(last.y + 4).toFixed(1)}">${last.carico} kg</text>`;
+    const etichettaPR = prSeparato
+      ? `<text class="pr-label" x="${pts[iPR].x.toFixed(1)}" y="${(pts[iPR].y - 10).toFixed(1)}" text-anchor="middle">record</text>`
+      : "";
+
+    const date = sorted.length === 1
+      ? `<text class="data" x="${first.x.toFixed(1)}" y="${h-7}" text-anchor="middle">${fmtDate(first.data)}</text>`
+      : `<text class="data" x="${padL}" y="${h-7}" text-anchor="start">${fmtDate(first.data)}</text>
+         <text class="data" x="${(w-padR).toFixed(1)}" y="${h-7}" text-anchor="end">${fmtDate(last.data)}</text>`;
+
+    const scala = piatto
+      ? `<text class="asse" x="${padL-8}" y="${(y(max)+4).toFixed(1)}" text-anchor="end">${max}</text>`
+      : `<text class="asse" x="${padL-8}" y="${(y(max)+4).toFixed(1)}" text-anchor="end">${max}</text>
+         <text class="asse" x="${padL-8}" y="${(y(min)+4).toFixed(1)}" text-anchor="end">${min}</text>`;
+
+    return `<svg viewBox="0 0 ${w} ${h}" class="sparkline" role="img"
+      aria-label="Andamento del carico: da ${first.carico} a ${last.carico} kg">
       <style>
-        .sparkline .axis-label{ font-family:'IBM Plex Mono',monospace; font-size:11px; fill:var(--ink-muted); }
-        .sparkline .date-label{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; fill:var(--ink-faint); }
-        .sparkline .line{ fill:none; stroke:var(--accent); stroke-width:2.25; }
+        .sparkline .asse{ font-family:'IBM Plex Mono',monospace; font-size:11px; fill:var(--ink-faint); }
+        .sparkline .data{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; fill:var(--ink-faint); }
+        .sparkline .valore{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; fill:var(--ink); }
+        .sparkline .pr-label{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.06em; fill:var(--good); }
+        .sparkline .linea{ fill:none; stroke:var(--accent); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+        .sparkline .area{ fill:var(--accent); opacity:.12; }
+        .sparkline .griglia{ stroke:var(--line); stroke-width:1; }
         .sparkline .pt{ fill:var(--surface); stroke:var(--accent); stroke-width:2; }
-        .sparkline .pt-pr{ fill:var(--good); stroke:var(--good); }
+        .sparkline .pt-ultimo{ fill:var(--accent); }
       </style>
-      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="var(--line-strong)" stroke-width="1"></line>
-      <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="var(--line-strong)" stroke-width="1"></line>
-      <text class="axis-label" x="4" y="${padT+4}">${max}</text>
-      <text class="axis-label" x="4" y="${h-padB+4}">${min}</text>
-      <text class="date-label" x="${padL}" y="${h-6}" text-anchor="start">${fmtDate(first.data)}</text>
-      <text class="date-label" x="${w-padR}" y="${h-6}" text-anchor="end">${fmtDate(last.data)}</text>
-      <polyline class="line" points="${poly}"></polyline>
-      ${circles}
+      <line class="griglia" x1="${padL}" y1="${baseY}" x2="${(w-padR).toFixed(1)}" y2="${baseY}"></line>
+      ${piatto ? "" : `<line class="griglia" x1="${padL}" y1="${padT}" x2="${(w-padR).toFixed(1)}" y2="${padT}" stroke-dasharray="3 4"></line>`}
+      <path class="area" d="${area}"></path>
+      <polyline class="linea" points="${poly}"></polyline>
+      ${punti}
+      ${scala}
+      ${date}
+      ${etichettaPR}
+      ${etichettaUltimo}
     </svg>`;
   }
 
@@ -522,7 +973,7 @@
     const day = getDay(ui.selectedDayId);
     if (!day){ panel.innerHTML = ""; return; }
 
-    const exHtml = day.esercizi.map(ex => renderExercise(day, ex)).join("");
+    const exHtml = day.esercizi.map((ex, i) => renderExercise(day, ex, i + 1)).join("");
 
     let headerRight;
     if (ui.renamingDay === day.id){
@@ -536,9 +987,13 @@
         </div>`;
     } else {
       headerRight = `
-        <div style="display:flex;gap:6px;">
-          <button class="btn small" data-action="rename-day" data-day="${day.id}">Rinomina</button>
-          <button class="btn small danger" data-action="delete-day" data-day="${day.id}">Elimina giorno</button>
+        <div class="day-azioni">
+          <button class="btn-icona" data-action="rename-day" data-day="${day.id}" title="Rinomina giorno" aria-label="Rinomina giorno">
+            <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M11.5 1.8l2.7 2.7-8 8-3.4.7.7-3.4 8-8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="btn-icona" data-action="delete-day" data-day="${day.id}" title="Elimina giorno" aria-label="Elimina giorno">
+            <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 9h5.8l.6-9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
         </div>`;
     }
 
@@ -548,18 +1003,28 @@
           <button type="submit" class="btn primary small">Salva</button>
           <button type="button" class="btn ghost small" data-action="cancel-rename-day">Annulla</button>
         </form>`
-      : `<span style="font-family:var(--font-display);font-weight:800;font-size:22px;">${esc(day.nome)}</span>`;
+      : `<span class="day-title">${esc(day.nome)}</span>`;
 
     panel.innerHTML = `
-      <div class="day-header-row">
-        <div class="day-name-edit">${headerLeft}</div>
-        ${headerRight}
+      <div class="day-card">
+        <div class="day-header-row">
+          <div class="day-name-edit">${headerLeft}</div>
+          ${headerRight}
+        </div>
+        ${riepilogoGiorno(day)}
       </div>
       <div class="ex-list">${exHtml || '<div class="empty-note">Nessun esercizio in questo giorno. Aggiungine uno qui sotto.</div>'}</div>
       <div class="add-ex-zone">
         ${ui.addExFor === day.id ? `
           <form class="add-ex-form" data-form="add-ex" data-day="${day.id}">
-            <div class="field full"><label>Esercizio</label><input type="text" name="nome" placeholder="Nome esercizio" required maxlength="60"></div>
+            <div class="field full">
+              <label>Esercizio</label>
+              <div class="campo-con-piu">
+                <input type="text" name="nome" placeholder="Nome esercizio" required maxlength="60">
+                <button type="button" class="btn-piu" data-action="aggiungi-movimento" title="Aggiungi un esercizio in superset">+</button>
+              </div>
+            </div>
+            <div class="movimenti-extra"></div>
             <div class="field"><label>Serie</label><input type="number" name="serieTarget" min="1" max="20" inputmode="numeric" value="3" required></div>
             <div class="field"><label>Ripetizioni</label><input type="text" name="ripTarget" placeholder="es. 8-10" value="10" required maxlength="12"></div>
             <div class="field full"><label>Note (opzionale)</label><input type="text" name="note" placeholder="es. presa larga, tempo 3-1-1" maxlength="120"></div>
@@ -572,7 +1037,24 @@
     `;
   }
 
-  function renderExercise(day, ex){
+  // Riga di statistiche sotto il nome del giorno: a colpo d'occhio dove sei.
+  function riepilogoGiorno(day){
+    const esercizi = day.esercizi.length;
+    const tutteLeSessioni = day.esercizi.flatMap(e => e.storico || []);
+    const ultima = tutteLeSessioni.length
+      ? tutteLeSessioni.map(s => s.data).sort().slice(-1)[0]
+      : null;
+
+    const voci = [
+      { n: esercizi, l: esercizi === 1 ? "esercizio" : "esercizi" },
+      { n: ultima ? fmtDate(ultima) : "—", l: "ultimo allenamento" }
+    ];
+    return `<div class="day-stats">${voci.map(v => `
+      <span class="stat"><span class="stat-n">${v.n}</span> ${v.l}</span>
+    `).join("")}</div>`;
+  }
+
+  function renderExercise(day, ex, posizione){
     const open = ui.openEx.has(ex.id);
     const editing = ui.editEx.has(ex.id);
     const info = ultimiDati(ex.storico);
@@ -581,12 +1063,12 @@
     if (info){
       let deltaHtml = "";
       if (info.prev){
-        const diff = info.last.carico - info.prev.carico;
+        const diff = caricoPrincipale(info.last) - caricoPrincipale(info.prev);
         const sign = diff > 0 ? "+" : "";
-        deltaHtml = `<span class="delta ${diff > 0 ? "up" : "down"}">${sign}${diff} kg</span>`;
+        if (diff !== 0) deltaHtml = `<span class="delta ${diff > 0 ? "up" : "down"}">${sign}${diff} kg</span>`;
       }
-      const prBadge = info.last.carico === info.pr ? `<span class="pr-badge">PR</span>` : "";
-      lastBlock = `<span class="kg">${info.last.carico} kg</span>${deltaHtml}${prBadge}`;
+      const prBadge = caricoPrincipale(info.last) === info.pr ? `<span class="pr-badge">PR</span>` : "";
+      lastBlock = `<span class="kg">${caricoTesto(info.last)}</span>${deltaHtml}${prBadge}`;
     }
 
     let editHtml = "";
@@ -602,7 +1084,16 @@
            <button type="submit" class="btn primary small">Salva</button>`;
       editHtml = `
         <form class="edit-form" data-form="edit-ex" data-day="${day.id}" data-ex="${ex.id}">
-          <div class="field full"><label>Nome esercizio</label><input type="text" name="nome" value="${esc(ex.nome)}" required maxlength="60"></div>
+          <div class="field full">
+            <label>Nome esercizio</label>
+            <div class="campo-con-piu">
+              <input type="text" name="nome" value="${esc(ex.nome)}" required maxlength="60">
+              <button type="button" class="btn-piu" data-action="aggiungi-movimento" title="Aggiungi un esercizio in superset">+</button>
+            </div>
+          </div>
+          <div class="movimenti-extra">${
+            eSuperset(ex) ? ex.parti.slice(1).map(p => rigaMovimento(p.nome)).join("") : ""
+          }</div>
           <div class="field"><label>Serie target</label><input type="number" name="serieTarget" min="1" max="20" value="${ex.serieTarget}" required></div>
           <div class="field"><label>Ripetizioni target</label><input type="text" name="ripTarget" value="${esc(ex.ripTarget)}" required maxlength="12"></div>
           <div class="field full"><label>Note</label><input type="text" name="note" value="${esc(ex.note || "")}" maxlength="120" placeholder="es. presa larga, tempo 3-1-1"></div>
@@ -612,27 +1103,64 @@
         </form>`;
     }
 
-    const suggestedCarico = info ? info.last.carico : "";
-    const logForm = `
-      <form class="log-form" data-form="log-session" data-day="${day.id}" data-ex="${ex.id}">
-        <div class="field mono"><label>Carico (kg)</label><input type="number" name="carico" step="0.5" min="0" inputmode="decimal" placeholder="${suggestedCarico || 0}" required></div>
-        <div class="field"><label>Serie</label><input type="number" name="serie" min="1" max="20" inputmode="numeric" value="${ex.serieTarget}" required></div>
-        <div class="field"><label>Ripetizioni</label><input type="number" name="ripetizioni" min="1" max="100" inputmode="numeric" placeholder="es. 8" required></div>
-        <div class="submit-cell">
+    // suggerisce il carico dell'ultima volta, per parte
+    const ultimoCarico = (i) => {
+      if (!info) return "";
+      const l = info.last;
+      if (l.parti && l.parti[i]) return l.parti[i].carico;
+      return i === 0 ? (l.carico || "") : "";
+    };
+    const campoRip = (nome, i) => `<div class="field"><label>Ripetizioni</label>
+      <input type="text" name="${nome}" pattern="[0-9]{1,3}(\\s?-\\s?[0-9]{1,3})?" placeholder="8 o 8-10" maxlength="9" required></div>`;
+    const campoCarico = (nome, i) => `<div class="field mono"><label>Carico (kg)</label>
+      <input type="number" name="${nome}" step="0.5" min="0" inputmode="decimal" placeholder="${ultimoCarico(i) || 0}" required></div>`;
+
+    let logForm;
+    if (eSuperset(ex)){
+      const parti = ex.parti.map((p, i) => `
+        <div class="ss-parte">
+          <span class="ss-nome"><span class="ss-num">${i+1}</span>${esc(p.nome)}</span>
+          <div class="ss-campi">
+            ${campoCarico("carico" + i, i)}
+            ${campoRip("rip" + i, i)}
+          </div>
           <span class="plate-hint" data-plate-hint></span>
-          <button type="submit" class="btn primary small">Registra sessione</button>
-        </div>
-      </form>`;
+        </div>`).join("");
+      logForm = `
+        <form class="log-form superset" data-form="log-session" data-day="${day.id}" data-ex="${ex.id}">
+          ${parti}
+          <div class="field ss-serie"><label>Serie (per entrambi)</label><input type="number" name="serie" min="1" max="20" inputmode="numeric" value="${ex.serieTarget}" required></div>
+          <div class="submit-cell">
+            <button type="submit" class="btn primary small">Registra sessione</button>
+          </div>
+        </form>`;
+    } else {
+      logForm = `
+        <form class="log-form" data-form="log-session" data-day="${day.id}" data-ex="${ex.id}">
+          ${campoCarico("carico", 0)}
+          <div class="field"><label>Serie</label><input type="number" name="serie" min="1" max="20" inputmode="numeric" value="${ex.serieTarget}" required></div>
+          ${campoRip("ripetizioni", 0)}
+          <div class="submit-cell">
+            <span class="plate-hint" data-plate-hint></span>
+            <button type="submit" class="btn primary small">Registra sessione</button>
+          </div>
+        </form>`;
+    }
 
     let chartBlock = `<div class="empty-note">Nessuna sessione registrata per questo esercizio. Registra la prima qui sopra.</div>`;
     let histBlock = "";
     if (info){
       chartBlock = `<div class="chart-wrap">${sparklineSVG(info.sorted)}</div>`;
-      const rows = [...info.sorted].reverse().map(s => `
+
+      const tutte = [...info.sorted].reverse();
+      const espanso = ui.storicoEspanso.has(ex.id);
+      const visibili = espanso ? tutte : tutte.slice(0, 5);
+
+      const rows = visibili.map(s => `
         <tr>
           <td>${fmtDate(s.data)}</td>
-          <td>${s.carico} kg</td>
-          <td>${s.serie}×${s.ripetizioni}</td>
+          <td>${caricoTesto(s)}</td>
+          <td>${s.serie}×${ripetizioniTeste(s)}</td>
           <td class="actions">${
             ui.confirmDeleteHist === s.id
               ? `<button class="btn small danger" data-action="delete-hist-confirm" data-day="${day.id}" data-ex="${ex.id}" data-hist="${s.id}">Conferma</button>
@@ -640,20 +1168,37 @@
               : `<button class="btn ghost small" data-action="delete-hist" data-hist="${s.id}">Elimina</button>`
           }</td>
         </tr>`).join("");
+
+      const piuVecchie = tutte.length - visibili.length;
+      const toggleStorico = tutte.length > 5
+        ? `<button class="btn small storico-toggle" data-action="toggle-storico" data-ex="${ex.id}">
+             ${espanso ? "Mostra solo le ultime 5" : `Mostra tutte le ${tutte.length} sessioni (${piuVecchie} più vecchie)`}
+           </button>`
+        : "";
+
       histBlock = `
         <div class="hist-wrap">
           <table class="hist">
             <thead><tr><th>Data</th><th>Carico</th><th>Serie×Rip</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
-        </div>`;
+        </div>
+        ${toggleStorico}`;
     }
 
     return `
       <div class="ex-card ${open ? "open" : ""}" data-ex-card="${ex.id}">
         <div class="ex-head" data-action="toggle-ex" data-ex="${ex.id}">
-          <svg class="chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M6 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div class="ex-name">${esc(ex.nome)}${ex.note ? `<span class="sub">${esc(ex.note)}</span>` : ""}</div>
+          <span class="ex-thumb">${
+            ex.immagine
+              ? `<img src="${ex.immagine}" alt="" loading="lazy">`
+              : `<span class="ex-num">${posizione}</span>`
+          }</span>
+          <div class="ex-name">${
+            eSuperset(ex)
+              ? ex.parti.map(p => esc(p.nome)).join(`<span class="ss-piu">+</span>`) + `<span class="ss-tag">superset</span>`
+              : esc(ex.nome)
+          }${ex.note ? `<span class="sub">${esc(ex.note)}</span>` : ""}</div>
           <div class="ex-target">${ex.serieTarget}×${esc(ex.ripTarget)}</div>
           <div class="ex-last">${lastBlock}</div>
           ${open ? `<button class="btn ghost small ex-edit-btn" data-action="toggle-edit-ex" data-ex="${ex.id}">${editing ? "Annulla" : "Modifica"}</button>` : ""}
@@ -683,6 +1228,7 @@
     if (rip) ex.ripTarget = rip.slice(0,12);
     ex.serieTarget = parseInt(d.serieTarget,10) || ex.serieTarget;
     ex.note = (d.note || "").trim().slice(0,120);
+    applicaSuperset(ex, nomiExtraDi(form));
 
     ui.editEx.delete(exId);
     persistDay(day);
@@ -722,6 +1268,18 @@
         ui.openEx.clear();
         ui.openEx.add(id);
       }
+      render();
+    } else if (action === "aggiungi-movimento"){
+      // lavoro diretto sul modulo: un nuovo render cancellerebbe quanto già scritto
+      const form = t.closest("form");
+      const zona = form.querySelector(".movimenti-extra");
+      zona.insertAdjacentHTML("beforeend", rigaMovimento(""));
+      zona.querySelector(".riga-movimento:last-child input").focus();
+    } else if (action === "rimuovi-movimento"){
+      t.closest(".riga-movimento").remove();
+    } else if (action === "toggle-storico"){
+      const id = t.getAttribute("data-ex");
+      if (ui.storicoEspanso.has(id)) ui.storicoEspanso.delete(id); else ui.storicoEspanso.add(id);
       render();
     } else if (action === "delete-ex"){
       ui.confirmDeleteEx = t.getAttribute("data-ex");
@@ -773,9 +1331,11 @@
   });
 
   document.addEventListener("input", (e) => {
-    if (e.target.name === "carico" && e.target.closest("form[data-form='log-session']")){
-      const form = e.target.closest("form");
-      const hint = form.querySelector("[data-plate-hint]");
+    if (/^carico/.test(e.target.name || "") && e.target.closest("form[data-form='log-session']")){
+      // nel superset ogni parte ha il suo riquadro e il suo conteggio dischi
+      const contesto = e.target.closest(".ss-parte") || e.target.closest("form");
+      const hint = contesto.querySelector("[data-plate-hint]");
+      if (!hint) return;
       const val = parseFloat(e.target.value);
       hint.textContent = val ? calcolaDischi(val) : "";
     }
@@ -806,35 +1366,50 @@
     } else if (formType === "add-ex"){
       const dayId = form.getAttribute("data-day");
       const day = getDay(dayId);
-      day.esercizi.push({
+      const nuovo = {
         id: uid("e"), nome: data.nome.trim().slice(0,60),
         serieTarget: parseInt(data.serieTarget,10) || 1,
         ripTarget: data.ripTarget.trim().slice(0,12),
         note: (data.note || "").trim().slice(0,120), storico: []
-      });
+      };
+      applicaSuperset(nuovo, nomiExtraDi(form));
+      day.esercizi.push(nuovo);
       ui.addExFor = null;
       persistDay(day);
       render();
+      assegnaImmagine(day, nuovo);
     } else if (formType === "edit-ex"){
       const dayId = form.getAttribute("data-day"), exId = form.getAttribute("data-ex");
       const day = getDay(dayId), ex = getEx(dayId, exId);
+      const nomePrecedente = ex.nome;
       ex.nome = data.nome.trim().slice(0,60);
       ex.serieTarget = parseInt(data.serieTarget,10) || 1;
       ex.ripTarget = data.ripTarget.trim().slice(0,12);
       ex.note = (data.note || "").trim().slice(0,120);
+      applicaSuperset(ex, nomiExtraDi(form));
       ui.editEx.delete(exId);
       persistDay(day);
       render();
+      if (ex.nome !== nomePrecedente){       // nome nuovo, immagine da rivedere
+        delete ex.immagine; delete ex.immagineCercata;
+        assegnaImmagine(day, ex);
+      }
     } else if (formType === "log-session"){
       const dayId = form.getAttribute("data-day"), exId = form.getAttribute("data-ex");
       const day = getDay(dayId), ex = getEx(dayId, exId);
-      ex.storico.push({
-        id: uid("s"),
-        data: todayISO(),
-        carico: parseFloat(data.carico),
-        serie: parseInt(data.serie,10),
-        ripetizioni: parseInt(data.ripetizioni,10)
-      });
+      const sessione = { id: uid("s"), data: todayISO(), serie: parseInt(data.serie,10) };
+
+      if (eSuperset(ex)){
+        sessione.parti = ex.parti.map((p, i) => ({
+          carico: parseFloat(data["carico" + i]),
+          ripetizioni: normalizzaRip(data["rip" + i])
+        }));
+      } else {
+        sessione.carico = parseFloat(data.carico);
+        sessione.ripetizioni = normalizzaRip(data.ripetizioni);
+      }
+
+      ex.storico.push(sessione);
       persistDay(day);
       render();
     }
@@ -846,6 +1421,7 @@
     if (!loadLocal()) saveLocal();
     render();
     connectDb();
+    recuperaImmaginiMancanti();
   }
 
   function connectDb(){
@@ -895,7 +1471,96 @@
 
   boot();
 })();
+
+// ---- cronometro ----
+// Modulo a sé: non dipende dal render dell'app, quindi il conteggio non si azzera
+// quando la scheda si ridisegna, e prosegue anche a riquadro chiuso.
+(function(){
+  "use strict";
+
+  const bolla = document.getElementById("cronoBolla");
+  const riquadro = document.getElementById("cronoRiquadro");
+  const display = document.getElementById("cronoTempo");
+  const bottoneAvvia = document.getElementById("cronoAvvia");
+
+  let trascorso = 0;        // millisecondi accumulati nelle sessioni precedenti
+  let partenza = 0;         // istante dell'ultimo avvio
+  let inCorso = false;
+  let battito = null;
+
+  function totale(){
+    return trascorso + (inCorso ? performance.now() - partenza : 0);
+  }
+
+  function formatta(ms){
+    const secondiTotali = Math.floor(ms / 1000);
+    const minuti = Math.floor(secondiTotali / 60);
+    const secondi = secondiTotali % 60;
+    return minuti + ":" + String(secondi).padStart(2, "0");
+  }
+
+  function aggiorna(){
+    const testo = formatta(totale());
+    display.textContent = testo;
+    // a riquadro chiuso il tempo resta visibile sulla bolla, così non lo si perde di vista
+    bolla.classList.toggle("in-corso", inCorso);
+    if (riquadro.hidden && (inCorso || trascorso > 0)){
+      bolla.textContent = testo;
+    } else if (riquadro.hidden){
+      bolla.innerHTML = ICONA;
+    }
+  }
+
+  const ICONA = bolla.innerHTML;
+
+  function avvia(){
+    if (inCorso) return;
+    inCorso = true;
+    partenza = performance.now();
+    bottoneAvvia.textContent = "Pausa";
+    battito = setInterval(aggiorna, 200);
+    aggiorna();
+  }
+
+  function ferma(){
+    if (!inCorso) return;
+    trascorso = totale();
+    inCorso = false;
+    clearInterval(battito); battito = null;
+    bottoneAvvia.textContent = "Riprendi";
+    aggiorna();
+  }
+
+  function azzera(){
+    ferma();
+    trascorso = 0;
+    bottoneAvvia.textContent = "Avvia";
+    aggiorna();
+  }
+
+  bolla.addEventListener("click", () => {
+    riquadro.hidden = false;
+    bolla.hidden = true;
+    aggiorna();
+  });
+
+  document.getElementById("cronoChiudi").addEventListener("click", () => {
+    riquadro.hidden = true;
+    bolla.hidden = false;
+    aggiorna();
+  });
+
+  bottoneAvvia.addEventListener("click", () => { inCorso ? ferma() : avvia(); });
+  document.getElementById("cronoAzzera").addEventListener("click", azzera);
+
+  // rientrando nell'app dopo averla lasciata in secondo piano il tempo è comunque giusto,
+  // perché si calcola dagli istanti e non dai battiti persi
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) aggiorna(); });
+
+  aggiorna();
+})();
 </script>
+<!-- FINE APP -->
 <script>
   if ("serviceWorker" in navigator){
     window.addEventListener("load", () => {
