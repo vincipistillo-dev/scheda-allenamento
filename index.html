@@ -88,7 +88,8 @@
   [hidden]{ display:none !important; }
   /* consente lo scorrimento ma non il pizzico per zoomare né il doppio tocco */
   /* light dark = anche i controlli nativi (tastierini, barre) seguono il tema di sistema */
-  html{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; color-scheme:light dark; }
+  html{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; color-scheme:light dark; overscroll-behavior:none; }
+  body{ overscroll-behavior:none; }
   body{
     margin:0;
     background:var(--ground);
@@ -103,15 +104,15 @@
   }
 
   /* spazio in fondo perché il cronometro non copra l'ultimo pulsante */
-  .shell{ max-width:820px; margin:0 auto; padding:28px 20px 100px; }
+  .shell{ max-width:820px; margin:0 auto; padding:max(10px, env(safe-area-inset-top)) 20px 100px; }
 
   header.top{
-    padding-bottom:20px; margin-bottom:22px; border-bottom:2px solid var(--ink);
+    padding-bottom:14px; margin-bottom:16px; border-bottom:2px solid var(--ink);
   }
   /* testata: data e nome dell'app centrati, comandi appoggiati a destra sulla stessa fascia */
   .intestazione-app{
     position:relative; text-align:center;
-    padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid var(--line);
+    padding:6px 0 12px; margin-bottom:14px; border-bottom:1px solid var(--line);
   }
   .nome-app{
     display:block; margin-top:3px;
@@ -136,24 +137,24 @@
   /* home: l'elenco delle schede */
   .schede-elenco{ display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
   .scheda-carta{
-    display:flex; flex-direction:column; gap:8px; cursor:pointer;
+    display:flex; flex-direction:column; gap:3px; cursor:pointer;
     transition:transform .12s ease, border-color .15s ease;
     background:
       radial-gradient(120% 140% at 0% 0%, var(--accent-soft) 0%, transparent 60%),
       var(--surface);
-    border:1px solid var(--line); border-radius:20px; padding:16px 16px;
+    border:1px solid var(--line); border-radius:18px; padding:12px 14px;
     box-shadow:var(--shadow);
   }
   .scheda-carta:hover{ border-color:var(--line-strong); }
   .scheda-carta:active{ transform:scale(.988); }
-  .scheda-alto{ display:flex; justify-content:flex-end; }
+  .scheda-alto{ display:flex; align-items:center; gap:8px; }
   .scheda-icona{
     display:inline-flex; align-items:center; justify-content:center;
     width:42px; height:42px; border-radius:14px;
     background:var(--accent-soft); color:var(--accent);
   }
   .scheda-icona .ico{ width:20px; height:20px; opacity:1; }
-  .scheda-nome{ font-family:var(--font-display); font-weight:800; font-size:24px; line-height:1.1; }
+  .scheda-nome{ font-family:var(--font-display); font-weight:800; font-size:21px; line-height:1.15; flex:1 1 auto; min-width:0; }
   .scheda-dati{ font-size:12.5px; color:var(--ink-muted); }
   .scheda-azioni{ display:flex; gap:4px; flex:none; }
   .pillola{
@@ -164,6 +165,11 @@
   }
   .pillola .ico{ width:13px; height:13px; }
   .azioni-top{ display:flex; gap:4px; flex:none; }
+  /* simbolo del peso: segna a destra il contesto "allenamento" */
+  .simbolo-peso{ margin-left:auto; display:inline-flex; color:var(--ink-faint); }
+  .simbolo-peso .ico{ width:19px; height:19px; }
+  #titolo{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  #titolo .btn-icona{ width:26px; height:26px; }
 
   /* impostazioni sopra al resto, con la pagina sfocata dietro */
   .velo{
@@ -174,15 +180,15 @@
   @keyframes velo-entra{ from{ opacity:0 } to{ opacity:1 } }
   body.bloccato{ overflow:hidden; }
   .foglio{
-    width:100%; max-width:440px; max-height:86vh; overflow-y:auto;
+    width:100%; max-width:380px; max-height:72vh; overflow-y:auto;
     background:var(--surface); border:1px solid var(--line-strong);
-    border-radius:26px 26px 0 0; padding:18px 18px calc(22px + env(safe-area-inset-bottom));
+    border-radius:24px 24px 0 0; padding:16px 16px calc(18px + env(safe-area-inset-bottom));
     box-shadow:0 -12px 40px rgba(0,0,0,.45);
     animation:foglio-sale .22s cubic-bezier(.22,.9,.3,1);
   }
   @keyframes foglio-sale{ from{ transform:translateY(24px); opacity:.6 } to{ transform:none; opacity:1 } }
   .foglio-testa{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-  .foglio-titolo{ font-family:var(--font-display); font-weight:800; font-size:22px; }
+  .foglio-titolo{ font-family:var(--font-display); font-weight:800; font-size:19px; }
   .foglio-corpo{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
   .foglio-corpo .eyebrow{ margin-top:8px; }
   .foglio-corpo form{ width:100%; }
@@ -593,7 +599,7 @@
   .empty-state h2{ font-family:var(--font-display); font-size:26px; color:var(--ink); margin:0 0 8px; }
 
   @media (max-width:620px){
-    .shell{ padding:20px 14px 96px; }
+    .shell{ padding:max(8px, env(safe-area-inset-top)) 14px 96px; }
     .brand h1{ font-size:30px; }
     /* la barra resta su una riga: le azioni vanno in alto a destra, non sotto */
     header.top{ align-items:flex-start; padding-bottom:16px; margin-bottom:18px; }
@@ -904,62 +910,75 @@
 
   // Tabella curata italiano -> disegno. Prima riga che combacia, quindi le varianti
   // più specifiche vanno prima di quelle generiche.
+  // Tabella curata: la prima riga le cui parole compaiono tutte nel nome vince,
+  // quindi le varianti specifiche stanno sopra quelle generiche.
+  // Ogni movimento ha sia le parole italiane sia quelle inglesi.
   const DISEGNI = [
-    [["panca","inclinata"],   "0043"],
-    [["panca"],               "0042"],
-    [["croci","cavi"],        "0057"],
-    [["croci"],               "0056"],
-    [["aperture"],            "0056"],
-    [["military"],            "0031"],
-    [["lento"],               "0031"],
-    [["spalle","manubri"],    "0031"],
-    [["alzate","laterali"],   "0018"],
-    [["alzate","frontali"],   "0033"],
-    [["tirate","mento"],      "0014"],
-    [["face","pull"],         "0017"],
-    [["deltoidi","posteriori"], "0017"],
-    [["dip"],                 "0172"],
+    // petto
+    [["panca","inclinata"],   "0043"], [["incline","bench"],    "0043"],
+    [["panca","manubri"],     "0055"], [["dumbbell","bench"],   "0055"],
+    [["panca"],               "0042"], [["bench","press"],      "0042"],
+    [["croci","cavi"],        "0057"], [["cable","fly"],        "0057"],
+    [["croci"],               "0056"], [["fly"],                "0056"],
+    [["aperture"],            "0056"], [["flyes"],              "0056"],
+    [["chest","press"],       "0042"],
+    // spalle
+    [["military"],            "0031"], [["shoulder","press"],   "0031"],
+    [["lento"],               "0031"], [["overhead","press"],   "0031"],
+    [["spalle"],              "0031"],
+    [["alzate","laterali"],   "0018"], [["lateral","raise"],    "0018"],
+    [["alzate","frontali"],   "0033"], [["front","raise"],      "0033"],
+    [["tirate","mento"],      "0014"], [["upright","row"],      "0014"],
+    [["face","pull"],         "0028"], [["rear","delt"],        "0028"],
+    [["deltoidi","posteriori"], "0028"],
+    // tricipiti
+    [["dip"],                 "0172"], [["dips"],               "0172"],
     [["parallele"],           "0172"],
-    [["french"],              "0198"],
-    [["pushdown"],            "0210"],
-    [["push-down"],           "0210"],
-    [["tricipiti"],           "0198"],
-    [["trazioni"],            "0087"],
-    [["sbarra"],              "0087"],
-    [["lat","machine"],       "0096"],
-    [["lat","pulldown"],      "0096"],
-    [["pulldown"],            "0096"],
-    [["rematore"],            "0022"],
-    [["pulley"],              "0022"],
-    [["stacco","rumeno"],     "0118"],
-    [["stacco"],              "0099"],
-    [["iperestensioni"],      "0103"],
-    [["curl","panca"],        "0239"],
-    [["curl"],                "0223"],
-    [["bicipiti"],            "0223"],
+    [["french"],              "0198"], [["skull"],              "0198"],
+    [["pushdown"],            "0210"], [["push-down"],          "0210"],
+    [["tricipiti"],           "0198"], [["triceps"],            "0198"],
+    // dorso
+    [["trazioni"],            "0087"], [["pull","up"],          "0087"],
+    [["sbarra"],              "0087"], [["pull-up"],            "0087"],
+    [["lat","machine"],       "0096"], [["lat","pulldown"],     "0096"],
+    [["pulldown"],            "0096"], [["pull","down"],        "0096"],
+    [["rematore"],            "0026"], [["bent","row"],         "0026"],
+    [["pulley"],              "0026"], [["barbell","row"],      "0026"],
+    [["stacco","rumeno"],     "0118"], [["romanian"],           "0118"],
+    [["stacco"],              "0099"], [["deadlift"],           "0099"],
+    [["dead","lift"],         "0099"],
+    [["iperestensioni"],      "0103"], [["hyperextension"],     "0103"],
+    // bicipiti
+    [["curl","panca"],        "0239"], [["preacher"],           "0239"],
+    [["curl","manubri"],      "0223"], [["dumbbell","curl"],    "0223"],
+    [["curl"],                "0211"], [["biceps"],             "0211"],
+    [["bicipiti"],            "0211"], [["bicep"],              "0211"],
+    // gambe
     [["squat"],               "0122"],
-    [["affondi","manubri"],   "0115"],
-    [["affondi"],             "0114"],
-    [["pressa"],              "0127"],
-    [["leg","press"],         "0127"],
-    [["leg","curl"],          "0117"],
-    [["femorali"],            "0117"],
-    [["leg","extension"],     "0142"],
-    [["quadricipiti"],        "0142"],
-    [["calf","seduto"],       "0279"],
-    [["calf"],                "0282"],
-    [["polpacci"],            "0282"],
-    [["crunch"],              "0291"],
-    [["addominali"],          "0291"],
-    [["plank"],               "0113"],
-    [["scrollate"],           "0030"],
-    [["shrug"],               "0030"]
+    [["affondi","manubri"],   "0115"], [["dumbbell","lunge"],   "0115"],
+    [["affondi"],             "0114"], [["lunge"],              "0114"],
+    [["pressa"],              "0127"], [["leg","press"],        "0127"],
+    [["leg","curl"],          "0117"], [["femorali"],           "0117"],
+    [["hamstring"],           "0117"],
+    [["leg","extension"],     "0142"], [["quadricipiti"],       "0142"],
+    [["calf","seduto"],       "0279"], [["seated","calf"],      "0279"],
+    [["calf"],                "0282"], [["polpacci"],           "0282"],
+    // core e trapezio
+    [["crunch"],              "0291"], [["addominali"],         "0291"],
+    [["abs"],                 "0291"], [["plank"],              "0113"],
+    [["scrollate"],           "0030"], [["shrug"],              "0030"]
   ];
 
-  function disegnoPer(nomeItaliano){
-    const testo = " " + String(nomeItaliano || "").toLowerCase() + " ";
+  // Parole intere, non sottostringhe: senza questo "lat machine" finirebbe
+  // sulle trazioni, perché "chin" è dentro "machine".
+  function parolaPresente(testo, parola){
+    return new RegExp("(^|[^a-zà-ù])" + parola.replace("-", "[-\s]") + "([^a-zà-ù]|$)").test(testo);
+  }
+
+  function disegnoPer(nome){
+    const testo = " " + String(nome || "").toLowerCase() + " ";
     for (const [chiavi, id] of DISEGNI){
-      if (chiavi.every(k => testo.includes(k))) return id;
+      if (chiavi.every(k => parolaPresente(testo, k))) return id;
     }
     return null;
   }
@@ -1207,30 +1226,41 @@
   }
 
   // ---- esporta / importa ----
-  // La scheda esportata è il programma, non il diario: niente storico dei carichi.
-  function schedaEsportabile(sc){
-    return {
-      formato: "scheda-allenamento/1",
-      nome: sc.nome,
-      giorni: sc.giorni.map(g => ({
-        nome: g.nome, ordine: g.ordine,
-        esercizi: g.esercizi.map(e => ({
-          nome: e.nome,
-          serieTarget: e.serieTarget,
-          ripTarget: e.ripTarget,
-          note: e.note || "",
-          ...(eSuperset(e) ? { parti: e.parti.map(p => ({ nome: p.nome, ripTarget: p.ripTarget })) } : {})
-        }))
-      }))
+  // La scheda esportata è il programma, non il diario: niente storico.
+  // Esce come tabella CSV, con una sezione per ogni giorno.
+  function schedaInTabella(sc){
+    const campo = (v) => {
+      const t = String(v ?? "");
+      // vanno protetti i campi che contengono separatore, virgolette o un a capo
+      const daProteggere = t.includes(";") || t.includes('"') || t.includes("\n") || t.includes("\r");
+      return daProteggere ? '"' + t.replace(/"/g, '""') + '"' : t;
     };
+    const righe = [];
+    for (const g of sc.giorni){
+      righe.push(campo(g.nome));                          // il giorno intitola la tabella
+      righe.push(["Esercizio","Serie","Ripetizioni","Note"].join(";"));
+      for (const e of g.esercizi){
+        if (eSuperset(e)){
+          e.parti.forEach((parte, i) => {
+            righe.push([campo(parte.nome), i === 0 ? e.serieTarget : "",
+                        campo(ripDiParte(e, i)),
+                        campo(i === 0 ? (e.note || "") : "in superset")].join(";"));
+          });
+        } else {
+          righe.push([campo(e.nome), e.serieTarget, campo(e.ripTarget), campo(e.note || "")].join(";"));
+        }
+      }
+      righe.push("");                                     // riga vuota fra un giorno e l'altro
+    }
+    return righe.join("\r\n");
   }
 
   async function esportaScheda(){
     const sc = schedaCorrente();
     if (!sc) return;
-    const testo = JSON.stringify(schedaEsportabile(sc), null, 2);
-    const nomeFile = sc.nome.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") + ".json";
-    const file = new File([testo], nomeFile, { type: "application/json" });
+    const testo = "﻿" + schedaInTabella(sc);          // il segno iniziale fa aprire bene gli accenti
+    const nomeFile = sc.nome.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") + ".csv";
+    const file = new File([testo], nomeFile, { type: "text/csv" });
 
     // sul telefono conviene il foglio di condivisione, altrove il salvataggio diretto
     if (navigator.canShare && navigator.canShare({ files: [file] })){
@@ -1241,48 +1271,6 @@
     a.href = url; a.download = nomeFile;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  // Legge una scheda incollata come testo o tabella.
-  // Riconosce le intestazioni di giorno e righe tipo "Panca piana 4x8-10 presa media",
-  // accettando sia spazi sia tabulazioni come separatore.
-  function leggiSchedaIncollata(testo){
-    const righe = String(testo || "").split(/\r?\n/).map(r => r.trim()).filter(Boolean);
-    const giorni = [];
-    let corrente = null;
-
-    const seriePerRip = /(\d{1,2})\s*[x×]\s*(\d{1,3}(?:\s*-\s*\d{1,3})?|max)/i;
-
-    for (const riga of righe){
-      const campi = riga.split(/\t|\s{2,}/).map(c => c.trim()).filter(Boolean);
-      const misura = riga.match(seriePerRip);
-
-      // senza serie×ripetizioni è l'intestazione di un giorno
-      if (!misura){
-        if (/^(giorno|day|scheda|settimana)/i.test(riga) || campi.length === 1){
-          corrente = { nome: riga.slice(0,60), esercizi: [] };
-          giorni.push(corrente);
-        }
-        continue;
-      }
-
-      if (!corrente){ corrente = { nome: "Giorno 1", esercizi: [] }; giorni.push(corrente); }
-
-      // il nome è ciò che precede la misura, la nota ciò che segue
-      const posizione = riga.indexOf(misura[0]);
-      const nome = riga.slice(0, posizione).replace(/[\t|;,-]+$/, "").trim();
-      const nota = riga.slice(posizione + misura[0].length).replace(/^[\t|;,-]+/, "").trim();
-      if (!nome) continue;
-
-      corrente.esercizi.push({
-        nome: nome.slice(0,60),
-        serieTarget: parseInt(misura[1], 10) || 3,
-        ripTarget: misura[2].replace(/\s+/g, "").slice(0,12),
-        note: nota.slice(0,120)
-      });
-    }
-
-    return giorni.filter(g => g.esercizi.length);
   }
 
   function importaDaTesto(testo){
@@ -1330,14 +1318,20 @@
     const zona = document.getElementById("addDayZone");
     const pannello = document.getElementById("dayPanel");
 
-    const saluto = new Date().getHours() < 18 ? "Buongiorno," : "Buonasera,";
-    document.getElementById("titolo").textContent = sc ? sc.nome : saluto;
-    document.getElementById("azioniTitolo").innerHTML = "";
+    const ora = new Date().getHours();
+    const saluto = ora < 13 ? "Buongiorno," : (ora < 18 ? "Buon pomeriggio," : "Buonasera,");
+    const titolo = document.getElementById("titolo");
+    titolo.innerHTML = sc
+      ? `${esc(sc.nome)}
+         <button class="btn-icona" data-action="rinomina-scheda" data-scheda="${sc.id}" title="Rinomina" aria-label="Rinomina scheda">${ICONE.matita}</button>
+         <button class="btn-icona" data-action="elimina-scheda" data-scheda="${sc.id}" title="Elimina" aria-label="Elimina scheda">${ICONE.cestino}</button>`
+      : esc(saluto);
     renderSettimana(document.getElementById("settimana"), !sc);
     renderImpostazioni();
-    document.getElementById("sottotitolo").textContent = sc
-      ? "Carichi, serie e progressioni"
-      : "Cosa alleniamo oggi?";
+    const sotto = document.getElementById("sottotitolo");
+    sotto.hidden = !!sc;                       // dentro la scheda il sottotitolo non serve
+    sotto.textContent = "Cosa alleniamo oggi?";
+    document.getElementById("azioniTitolo").innerHTML = sc ? `<span class="simbolo-peso">${ICONE.bilanciere}</span>` : "";
     document.getElementById("azioniTop").innerHTML = sc
       ? `<button class="btn-icona" data-action="torna-schede" title="Le mie schede" aria-label="Torna alle schede">${ICONE.indietro}</button>
          <button class="btn-icona" data-action="esporta-scheda" title="Esporta la scheda" aria-label="Esporta la scheda">${ICONE.esporta}</button>`
@@ -1380,7 +1374,6 @@
         <textarea name="testo" class="area-import" rows="6" placeholder="Giorno A — Spinta&#10;Panca piana  4x8-10  presa media&#10;Croci ai cavi  3x12-15"></textarea>
         <div class="foglio-azioni">
           <button type="submit" class="btn primary small">${ICONE.importa}Importa</button>
-          <button type="button" class="btn small" data-action="importa-scheda">Da file</button>
         </div>
       </form>
       <input type="file" id="fileImport" accept="application/json,.json" hidden>
@@ -1455,14 +1448,13 @@
       }
       return `<div class="scheda-carta" data-action="apri-scheda" data-scheda="${sc.id}">
         <div class="scheda-alto">
+          <span class="scheda-nome">${esc(sc.nome)}</span>
           <div class="scheda-azioni">
             <button class="btn-icona" data-action="rinomina-scheda" data-scheda="${sc.id}" title="Rinomina" aria-label="Rinomina scheda">${ICONE.matita}</button>
             <button class="btn-icona" data-action="elimina-scheda" data-scheda="${sc.id}" title="Elimina" aria-label="Elimina scheda">${ICONE.cestino}</button>
           </div>
         </div>
-        <span class="scheda-nome">${esc(sc.nome)}</span>
-        <span class="scheda-dati">${sc.giorni.length} giorni · ${esercizi} esercizi</span>
-        <span class="pillola">${ICONE.orologio}${ultima ? "Ultimo allenamento " + fmtDate(ultima) : "Nessuna sessione registrata"}</span>
+        <span class="scheda-dati">${sc.giorni.length} giorni · ${esercizi} esercizi · ${ultima ? "ultimo " + fmtDate(ultima) : "mai allenata"}</span>
       </div>`;
     }).join("");
 
@@ -1542,7 +1534,8 @@
           <button class="btn-icona" data-action="delete-day" data-day="${day.id}" title="Elimina giorno" aria-label="Elimina giorno">
             ${ICONE.cestino}
           </button>
-        </div>`;
+        </div>
+        <span class="simbolo-peso">${ICONE.bilanciere}</span>`;
     }
 
     const headerLeft = ui.renamingDay === day.id
@@ -1610,8 +1603,7 @@
         const sign = diff > 0 ? "+" : "";
         if (diff !== 0) deltaHtml = `<span class="delta ${diff > 0 ? "up" : "down"}">${sign}${diff} kg</span>`;
       }
-      const prBadge = caricoPrincipale(info.last) === info.pr ? `<span class="pr-badge">PR</span>` : "";
-      lastBlock = `<span class="kg">${caricoTesto(info.last)}</span>${deltaHtml}${prBadge}`;
+      lastBlock = `<span class="kg">${caricoTesto(info.last)}</span>${deltaHtml}`;
     }
 
     let editHtml = "";
@@ -2103,6 +2095,30 @@
       }catch(err){}
     }).catch(() => {});
   }
+
+  // Gesto per tornare all'elenco: trascinamento da sinistra verso destra,
+  // come la navigazione di sistema. Ignora i trascinamenti verticali.
+  (function gestoIndietro(){
+    let x0 = null, y0 = null;
+    document.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) { x0 = null; return; }
+      x0 = e.touches[0].clientX;
+      y0 = e.touches[0].clientY;
+    }, { passive:true });
+
+    document.addEventListener("touchend", (e) => {
+      if (x0 === null || !ui.schedaAperta) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - x0, dy = Math.abs(t.clientY - y0);
+      x0 = null;
+      // parte dal bordo sinistro, è orizzontale e abbastanza ampio
+      if (x0 === null && dx > 70 && dy < 50 && (t.clientX - dx) < 60){
+        salvaModificheAperte();
+        ui.schedaAperta = null; ui.openEx.clear();
+        render();
+      }
+    }, { passive:true });
+  })();
 
   // Safari ignora user-scalable=no: gli eventi gesture sono l'unico modo di fermare il pizzico
   ["gesturestart","gesturechange","gestureend"].forEach((evt) => {
