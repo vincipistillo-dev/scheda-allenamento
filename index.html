@@ -84,6 +84,8 @@
   }
 
   *{ box-sizing:border-box; }
+  /* senza questa, un display:flex/grid batte l'attributo hidden e l'elemento resta a schermo */
+  [hidden]{ display:none !important; }
   /* consente lo scorrimento ma non il pizzico per zoomare né il doppio tocco */
   /* light dark = anche i controlli nativi (tastierini, barre) seguono il tema di sistema */
   html{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; color-scheme:light dark; }
@@ -104,19 +106,156 @@
   .shell{ max-width:820px; margin:0 auto; padding:28px 20px 100px; }
 
   header.top{
-    display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
     padding-bottom:20px; margin-bottom:22px; border-bottom:2px solid var(--ink);
   }
+  /* testata: data e nome dell'app centrati, comandi appoggiati a destra sulla stessa fascia */
+  .intestazione-app{
+    position:relative; text-align:center;
+    padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid var(--line);
+  }
+  .nome-app{
+    display:block; margin-top:3px;
+    font-family:var(--font-display); font-weight:800; font-size:21px;
+    letter-spacing:.01em; color:var(--ink);
+  }
+  .intestazione-app .azioni-top{
+    position:absolute; right:0; top:50%; transform:translateY(-50%);
+  }
+  .riga-titolo{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
   .brand h1{
     font-family:var(--font-display); font-weight:800; font-size:40px;
     letter-spacing:.2px; margin:0; line-height:.9; text-wrap:balance;
   }
   .brand p{ margin:6px 0 0; color:var(--ink-muted); font-size:13.5px; }
+  .oggi{
+    display:block;
+    font-family:var(--font-mono); font-size:10.5px; font-weight:600;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--accent);
+  }
+
+  /* home: l'elenco delle schede */
+  .schede-elenco{ display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+  .scheda-carta{
+    display:flex; flex-direction:column; gap:8px; cursor:pointer;
+    transition:transform .12s ease, border-color .15s ease;
+    background:
+      radial-gradient(120% 140% at 0% 0%, var(--accent-soft) 0%, transparent 60%),
+      var(--surface);
+    border:1px solid var(--line); border-radius:20px; padding:16px 16px;
+    box-shadow:var(--shadow);
+  }
+  .scheda-carta:hover{ border-color:var(--line-strong); }
+  .scheda-carta:active{ transform:scale(.988); }
+  .scheda-alto{ display:flex; justify-content:flex-end; }
+  .scheda-icona{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:42px; height:42px; border-radius:14px;
+    background:var(--accent-soft); color:var(--accent);
+  }
+  .scheda-icona .ico{ width:20px; height:20px; opacity:1; }
+  .scheda-nome{ font-family:var(--font-display); font-weight:800; font-size:24px; line-height:1.1; }
+  .scheda-dati{ font-size:12.5px; color:var(--ink-muted); }
+  .scheda-azioni{ display:flex; gap:4px; flex:none; }
+  .pillola{
+    display:inline-flex; align-items:center; gap:7px; align-self:flex-start;
+    padding:6px 12px; border-radius:99px; margin-top:4px;
+    background:var(--surface-2); border:1px solid var(--line);
+    font-size:11.5px; color:var(--ink-muted);
+  }
+  .pillola .ico{ width:13px; height:13px; }
+  .azioni-top{ display:flex; gap:4px; flex:none; }
+
+  /* impostazioni sopra al resto, con la pagina sfocata dietro */
+  .velo{
+    position:fixed; inset:0; z-index:90; display:flex; align-items:flex-end; justify-content:center;
+    background:rgba(0,0,0,.45); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    animation:velo-entra .18s ease-out;
+  }
+  @keyframes velo-entra{ from{ opacity:0 } to{ opacity:1 } }
+  body.bloccato{ overflow:hidden; }
+  .foglio{
+    width:100%; max-width:440px; max-height:86vh; overflow-y:auto;
+    background:var(--surface); border:1px solid var(--line-strong);
+    border-radius:26px 26px 0 0; padding:18px 18px calc(22px + env(safe-area-inset-bottom));
+    box-shadow:0 -12px 40px rgba(0,0,0,.45);
+    animation:foglio-sale .22s cubic-bezier(.22,.9,.3,1);
+  }
+  @keyframes foglio-sale{ from{ transform:translateY(24px); opacity:.6 } to{ transform:none; opacity:1 } }
+  .foglio-testa{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .foglio-titolo{ font-family:var(--font-display); font-weight:800; font-size:22px; }
+  .foglio-corpo{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+  .foglio-corpo .eyebrow{ margin-top:8px; }
+  .foglio-corpo form{ width:100%; }
+  .nota-foglio{ margin:0; font-size:12.5px; color:var(--ink-muted); }
+  .area-import{
+    width:100%; margin-top:6px; padding:10px 12px; border-radius:14px; resize:vertical;
+    background:var(--surface-2); border:1px solid var(--line-strong); color:var(--ink);
+    font-family:var(--font-mono); font-size:13px; line-height:1.5;
+  }
+  .foglio-azioni{ display:flex; gap:8px; margin-top:10px; }
+  @media (prefers-reduced-motion: reduce){
+    .velo, .foglio{ animation:none; }
+  }
+
+  /* settimana: giorni come pastiglie, oggi in pieno, allenati con il punto sotto */
+  .blocco-settimana{
+    margin-top:16px; padding:14px 14px 12px;
+    background:var(--surface); border:1px solid var(--line); border-radius:20px;
+  }
+  .settimana-testa{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
+  .settimana-testa .eyebrow{ margin-bottom:0; }
+  .settimana-conto{ font-size:11.5px; color:var(--ink-muted); }
+  .settimana{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .giorno-cella{
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    padding:2px 0 8px; border-radius:16px; position:relative;
+    transition:background .18s ease;
+  }
+  .giorno-lettera{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-faint);
+  }
+  .giorno-numero{
+    display:flex; align-items:center; justify-content:center;
+    width:32px; height:32px; border-radius:50%;
+    font-family:var(--font-mono); font-size:14px; font-weight:600; color:var(--ink-muted);
+    transition:background .18s ease, color .18s ease;
+  }
+  /* il punto segnala l'allenamento anche a chi non distingue bene i colori */
+  .giorno-cella.allenato::after{
+    content:""; position:absolute; bottom:2px;
+    width:5px; height:5px; border-radius:50%; background:var(--accent);
+  }
+  .giorno-cella.allenato .giorno-numero{ background:var(--accent-soft); color:var(--accent); }
+  .giorno-cella.oggi .giorno-numero{ background:var(--accent); color:var(--accent-ink); }
+  .giorno-cella.oggi.allenato::after{ background:var(--accent); }
+  /* tema: comando segmentato a sole icone */
+  .scelta-tema{ display:inline-flex; gap:2px; padding:3px; border-radius:99px; background:var(--surface-2); border:1px solid var(--line); }
+  .tema-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:42px; height:34px; border-radius:99px; cursor:pointer;
+    background:transparent; border:none; color:var(--ink-faint);
+    transition:background .15s ease, color .15s ease;
+  }
+  .tema-btn:hover{ color:var(--ink); }
+  .tema-btn .ico{ width:17px; height:17px; opacity:1; }
+  .tema-btn.attiva{ background:var(--accent); color:var(--accent-ink); }
+  .chip{
+    padding:7px 14px; border-radius:99px; cursor:pointer;
+    background:transparent; border:1px solid var(--line-strong); color:var(--ink-muted);
+    font-family:var(--font-body); font-size:12.5px; font-weight:600;
+  }
+  .chip:hover{ color:var(--ink); border-color:var(--ink-faint); }
+  .chip.attiva{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .avviso{ border-style:solid; border-color:var(--accent); color:var(--ink); margin-bottom:12px; }
+  .scheda-conferma{ margin-bottom:12px; justify-content:flex-start; }
+  .scheda-rinomina{ margin-bottom:0; }
 
   .day-tabs{
-    display:flex; gap:8px; overflow-x:auto; padding:4px 4px 10px; margin-bottom:18px;
-    scrollbar-width:thin;
+    display:flex; gap:8px; overflow-x:auto; padding:4px 4px 8px; margin-bottom:18px;
+    scrollbar-width:none; -ms-overflow-style:none;   /* si scorre, ma senza barra a vista */
   }
+  .day-tabs::-webkit-scrollbar{ display:none; }
   .day-tab{
     font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:.2px;
     padding:9px 20px; border-radius:999px; border:1px solid var(--line);
@@ -133,10 +272,12 @@
   .day-tab-add:hover{ color:var(--accent); border-color:var(--accent); }
 
   .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
     font-family:var(--font-body); font-weight:600; font-size:13.5px; cursor:pointer;
     border-radius:11px; padding:9px 14px; border:1px solid var(--line-strong);
     background:var(--surface-2); color:var(--ink);
   }
+  .ico{ flex:none; opacity:.85; }
   .btn:hover{ border-color:var(--ink-faint); }
   .btn.primary{
     background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
@@ -193,11 +334,17 @@
     box-shadow:var(--shadow); overflow:hidden;
   }
   .ex-head{
-    display:flex; align-items:center; gap:14px; padding:16px 18px; cursor:pointer;
+    display:flex; align-items:center; gap:12px; padding:10px 14px; cursor:pointer;
   }
   .ex-head:hover{ background:var(--surface-2); }
-  .ex-name{ font-family:var(--font-display); font-weight:700; font-size:21px; flex:1 1 auto; min-width:0; }
-  .ex-name .sub{ font-family:var(--font-body); font-weight:500; font-size:12.5px; color:var(--ink-muted); display:block; margin-top:1px; }
+  /* nome e serie×ripetizioni impilati stretti, così la riga resta alta quanto la foto */
+  .ex-testo{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .ex-name{ font-family:var(--font-display); font-weight:700; font-size:20px; line-height:1.15; }
+  /* la nota accompagna il nome sulla stessa riga, non sotto */
+  .ex-name .sub{
+    font-family:var(--font-body); font-weight:500; font-size:12.5px; color:var(--ink-muted);
+    margin-left:8px; white-space:nowrap;
+  }
   .ex-target{ font-family:var(--font-mono); font-size:13px; color:var(--ink-muted); flex:none; }
   .ex-last{ display:flex; flex-direction:column; align-items:flex-end; flex:none; min-width:84px; }
   .ex-last .kg{ font-family:var(--font-mono); font-weight:600; font-size:17px; }
@@ -213,7 +360,9 @@
     width:46px; height:46px; border-radius:13px; overflow:hidden;
     background:var(--surface-2); border:1px solid var(--line);
   }
-  .ex-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  /* il disegno prende il colore dell'accento e lascia trasparente lo sfondo */
+  .ex-thumb.con-disegno{ background:var(--accent-soft); border-color:var(--accent-soft); color:var(--accent); }
+  .ex-thumb svg{ width:88%; height:88%; display:block; }
   .ex-num{
     font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--ink-faint);
   }
@@ -269,12 +418,20 @@
   }
   .ss-campi{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .log-form.superset .ss-serie{ max-width:160px; }
-  .campo-con-piu{ display:flex; gap:6px; align-items:center; }
-  .campo-con-piu input{ flex:1; min-width:0; }
+  /* i riquadri numerati del modulo riprendono quelli della registrazione sessione */
+  .blocco-movimento{ grid-column:1/-1; }
+  .ss-riga-testa{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .campi-movimento{ grid-template-columns:1fr 62px 76px; }
+  /* senza il campo serie dentro il riquadro restano due sole colonne */
+  .campi-movimento:has(.field:nth-child(2):last-child){ grid-template-columns:1fr 104px; }
+  /* nel superset le serie affiancano le note, perché valgono per tutti i movimenti */
+  .riga-serie-note{ grid-column:1/-1; display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:end; }
+  .slot-serie:empty{ display:none; }
+  .slot-serie .campo-serie{ width:76px; }
   .btn-piu{
-    flex:none; width:38px; height:38px; border-radius:11px; cursor:pointer;
+    flex:none; width:32px; height:32px; border-radius:10px; cursor:pointer;
     background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent);
-    font-size:19px; line-height:1; font-weight:600;
+    font-size:18px; line-height:1; font-weight:600;
   }
   .btn-piu:hover{ background:var(--accent); color:var(--accent-ink); }
   .btn-piu.rimuovi{
@@ -292,6 +449,13 @@
     font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.08em;
     text-transform:uppercase; color:var(--accent); background:var(--accent-soft);
     border-radius:99px; padding:3px 8px;
+  }
+  .azioni-sessione{ display:flex; gap:8px; align-items:center; }
+  .azioni-sessione .btn{ white-space:nowrap; }
+
+  /* lo storico è una sezione che si apre a richiesta, staccata dal modulo */
+  .storico-pannello{
+    margin-top:16px; padding-top:16px; border-top:1px solid var(--line);
   }
   .storico-toggle{ width:100%; margin-top:10px; color:var(--ink-muted); }
   .storico-toggle:hover{ color:var(--accent); }
@@ -338,26 +502,71 @@
   .crono-bolla{
     position:fixed; right:16px; z-index:50;
     bottom:calc(16px + env(safe-area-inset-bottom));
-    display:inline-flex; align-items:center; justify-content:center; gap:7px;
-    min-width:52px; height:52px; padding:0 16px; border-radius:99px; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:56px; height:56px; padding:0; border-radius:50%; cursor:pointer;
     background:var(--accent); color:var(--accent-ink); border:none;
     box-shadow:0 6px 20px rgba(0,0,0,.35);
-    font-family:var(--font-mono); font-size:16px; font-weight:600; font-variant-numeric:tabular-nums;
   }
   .crono-bolla:hover{ filter:brightness(1.08); }
-  .crono-bolla.in-corso{ animation:crono-pulsa 2s ease-in-out infinite; }
+  .crono-bolla-dentro{
+    position:relative; z-index:1; display:inline-flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;
+  }
+  /* anello di avanzamento: parte in alto e si chiude col passare del recupero */
+  .crono-anello{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .crono-anello circle, .crono-anello-grande circle{ fill:none; stroke-linecap:round; }
+  .crono-anello .anello-fondo{ stroke:var(--accent-ink); opacity:.22; stroke-width:4; }
+  .crono-anello .anello-avanti{ stroke:var(--accent-ink); stroke-width:4; transition:stroke-dashoffset .2s linear; }
+  .crono-bolla.inattivo .crono-anello{ display:none; }
+  .crono-bolla.finito{ animation:crono-pulsa 1.1s ease-in-out infinite; }
   @keyframes crono-pulsa{
     0%,100%{ box-shadow:0 6px 20px rgba(0,0,0,.35); }
-    50%{ box-shadow:0 6px 26px var(--accent-soft), 0 0 0 4px var(--accent-soft); }
+    50%{ box-shadow:0 6px 26px var(--accent-soft), 0 0 0 5px var(--accent-soft); }
   }
 
   .crono-riquadro{
     position:fixed; right:16px; z-index:51;
     bottom:calc(16px + env(safe-area-inset-bottom));
-    width:190px; padding:14px;
-    background:var(--surface); border:1px solid var(--line-strong); border-radius:18px;
+    width:228px; padding:18px;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:30px;
     box-shadow:0 10px 32px rgba(0,0,0,.45);
   }
+  .crono-quadrante{
+    position:relative; width:132px; height:132px; margin:4px auto 12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .crono-anello-grande{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .crono-anello-grande .anello-fondo{ stroke:var(--line); stroke-width:8; }
+  .crono-anello-grande .anello-avanti{ stroke:var(--accent); stroke-width:8; transition:stroke-dashoffset .2s linear; }
+  .crono-riquadro.finito .crono-anello-grande .anello-avanti{ stroke:var(--good); }
+
+  /* ruote di scelta del recupero: si scorrono come la sveglia del telefono */
+  .crono-ruote{
+    position:relative; display:flex; align-items:center; justify-content:center; gap:4px;
+    height:102px; margin:6px 0 14px;
+  }
+  .ruota{
+    height:102px; width:64px; overflow-y:auto; scroll-snap-type:y mandatory;
+    scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch;
+    /* le voci lontane dal centro sfumano, come sul quadrante di un orologio */
+    mask-image:linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent);
+    -webkit-mask-image:linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent);
+  }
+  .ruota::-webkit-scrollbar{ display:none; }
+  .ruota-lista{ padding:34px 0; }
+  .ruota-voce{
+    height:34px; display:flex; align-items:center; justify-content:center;
+    scroll-snap-align:center; cursor:grab;
+    font-family:var(--font-mono); font-size:23px; font-variant-numeric:tabular-nums;
+    color:var(--ink-faint); transition:color .15s ease;
+  }
+  .ruota-voce.scelta{ color:var(--ink); font-weight:600; }
+  .ruota-sep{ font-family:var(--font-mono); font-size:21px; color:var(--ink-muted); padding-bottom:2px; }
+  .ruota-banda{
+    position:absolute; left:8px; right:8px; top:34px; height:34px; pointer-events:none;
+    border-radius:10px; background:var(--accent-soft); opacity:.55;
+  }
+
   .crono-testa{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
   .crono-etichetta{
     font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.14em;
@@ -369,9 +578,11 @@
   }
   .crono-chiudi:hover{ color:var(--accent); }
   .crono-tempo{
-    font-family:var(--font-mono); font-size:34px; font-weight:600; line-height:1.1;
-    font-variant-numeric:tabular-nums; margin-bottom:10px; color:var(--ink);
+    position:relative; z-index:1;
+    font-family:var(--font-mono); font-size:32px; font-weight:600; line-height:1;
+    font-variant-numeric:tabular-nums; color:var(--ink);
   }
+  .crono-riquadro.finito .crono-tempo{ color:var(--good); }
   .crono-azioni{ display:flex; gap:8px; }
   .crono-azioni .btn{ flex:1; }
   @media (prefers-reduced-motion: reduce){ .crono-bolla.in-corso{ animation:none; } }
@@ -384,22 +595,13 @@
   @media (max-width:620px){
     .shell{ padding:20px 14px 96px; }
     .brand h1{ font-size:30px; }
-    header.top{ flex-direction:column; align-items:flex-start; padding-bottom:16px; margin-bottom:18px; }
+    /* la barra resta su una riga: le azioni vanno in alto a destra, non sotto */
+    header.top{ align-items:flex-start; padding-bottom:16px; margin-bottom:18px; }
+    .brand{ min-width:0; }
 
-    /* exercise row: name on its own line, target and last load below it */
-    .ex-head{
-      display:grid; align-items:start;
-      grid-template-columns:46px minmax(0,1fr) auto;
-      grid-template-areas:
-        "chev name   last"
-        ".    target edit";
-      column-gap:12px; row-gap:6px; padding:14px 14px;
-    }
-    .ex-thumb{ grid-area:chev; }
-    .ex-name{ grid-area:name; font-size:19px; }
-    .ex-target{ grid-area:target; justify-self:start; align-self:center; }
-    .ex-last{ grid-area:last; min-width:0; }
-    .ex-edit-btn{ grid-area:edit; justify-self:end; }
+    .ex-head{ gap:10px; padding:10px 12px; }
+    .ex-name{ font-size:18px; }
+    .ex-last{ min-width:0; }
 
     .ex-body{ padding:14px; }
     /* 16px è la soglia sotto cui iOS ingrandisce la pagina al tocco su un campo */
@@ -409,7 +611,8 @@
     .log-form .field label{ font-size:9.5px; letter-spacing:.03em; }
     .add-ex-form > div:last-child{ grid-column:1/-1; }
     .log-form .submit-cell{ flex-direction:column; align-items:stretch; }
-    .log-form .submit-cell .btn{ width:100%; }
+    .azioni-sessione{ width:100%; }
+    .azioni-sessione .btn[type="submit"]{ flex:1; }
     .edit-form-actions{ flex-wrap:wrap; }
     .edit-form-actions .btn{ flex:1 1 auto; }
 
@@ -433,11 +636,22 @@
 <body>
 <div class="shell">
   <header class="top">
-    <div class="brand">
-      <h1>Scheda di Allenamento</h1>
-      <p>Il tuo diario di carichi, serie e progressioni</p>
+    <div class="intestazione-app">
+      <span class="oggi" id="oggi"></span>
+      <span class="nome-app">my workout planner</span>
+      <div class="azioni-top" id="azioniTop"></div>
     </div>
+    <div class="riga-titolo">
+      <div class="brand">
+        <h1 id="titolo"></h1>
+        <p id="sottotitolo"></p>
+      </div>
+      <div class="azioni-titolo" id="azioniTitolo"></div>
+    </div>
+    <div id="settimana"></div>
   </header>
+
+  <main id="home"></main>
 
   <div class="day-tabs" id="dayTabs"></div>
 
@@ -446,22 +660,57 @@
   <main id="dayPanel"></main>
 </div>
 
+<!-- impostazioni: coprono tutto, con il contenuto dietro sfocato -->
+<div class="velo" id="velo" hidden>
+  <div class="foglio" role="dialog" aria-modal="true" aria-label="Impostazioni">
+    <div class="foglio-testa">
+      <span class="foglio-titolo">Impostazioni</span>
+      <button class="btn-icona" data-action="toggle-impostazioni" aria-label="Chiudi">
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="foglio-corpo" id="foglioCorpo"></div>
+  </div>
+</div>
+
 <!-- cronometro: vive fuori dalla pagina che si ridisegna, così non perde mai il conteggio -->
-<button class="crono-bolla" id="cronoBolla" aria-label="Apri il cronometro">
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-    <circle cx="12" cy="13.5" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/>
-    <path d="M12 9.8v3.7l2.4 1.6M9.4 2.5h5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<button class="crono-bolla" id="cronoBolla" aria-label="Apri il timer di recupero">
+  <svg class="crono-anello" viewBox="0 0 56 56" aria-hidden="true">
+    <circle class="anello-fondo" cx="28" cy="28" r="24"></circle>
+    <circle class="anello-avanti" id="cronoAnelloBolla" cx="28" cy="28" r="24"></circle>
   </svg>
+  <span class="crono-bolla-dentro" id="cronoBollaDentro">
+    <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">
+      <circle cx="12" cy="13.5" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 9.8v3.7l2.4 1.6M9.4 2.5h5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </span>
 </button>
 
 <div class="crono-riquadro" id="cronoRiquadro" hidden>
   <div class="crono-testa">
     <span class="crono-etichetta">Recupero</span>
-    <button class="crono-chiudi" id="cronoChiudi" aria-label="Chiudi il cronometro">
+    <button class="crono-chiudi" id="cronoChiudi" aria-label="Chiudi il timer">
       <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
   </div>
-  <div class="crono-tempo" id="cronoTempo">0:00</div>
+
+  <div class="crono-quadrante" id="cronoQuadrante" hidden>
+    <svg class="crono-anello-grande" viewBox="0 0 132 132" aria-hidden="true">
+      <circle class="anello-fondo" cx="66" cy="66" r="58"></circle>
+      <circle class="anello-avanti" id="cronoAnello" cx="66" cy="66" r="58"></circle>
+    </svg>
+    <span class="crono-tempo" id="cronoTempo">1:30</span>
+  </div>
+
+  <!-- prima dell'avvio si sceglie il recupero facendo scorrere le due ruote -->
+  <div class="crono-ruote" id="cronoRuote">
+    <div class="ruota" id="ruotaMinuti" aria-label="Minuti"></div>
+    <span class="ruota-sep">:</span>
+    <div class="ruota" id="ruotaSecondi" aria-label="Secondi"></div>
+    <div class="ruota-banda" aria-hidden="true"></div>
+  </div>
+
   <div class="crono-azioni">
     <button class="btn primary small" id="cronoAvvia">Avvia</button>
     <button class="btn small" id="cronoAzzera">Azzera</button>
@@ -473,8 +722,33 @@
   "use strict";
 
   const STORAGE_KEY = "schedaDiFerro:v1";
+  const CHIAVE_TEMA = "schedaDiFerro:tema";
   const BAR_KG = 20;
   const PLATES = [25,20,15,10,5,2.5,1.25];
+
+  // piccole icone di linea, coerenti fra loro: tratto 1.8, angoli tondi
+  const icona = (d, extra) => `<svg class="ico" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+    <path d="${d}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>${extra || ""}</svg>`;
+  const ICONE = {
+    spunta:  icona("M4 10.5l4 4 8-9"),
+    grafico: icona("M3 16V9M8 16V5M13 16v-4M18 16v-8"),
+    chiudi:  icona("M5 5l10 10M15 5L5 15"),
+    piu:     icona("M10 4v12M4 10h12"),
+    matita:  icona("M13.5 3.5l3 3-9 9-4 1 1-4 9-9z"),
+    cestino: icona("M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l.8 11h7.4l.8-11"),
+    orologio: icona("M10 6.2v4l2.6 1.7", `<circle cx="10" cy="11" r="6.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.8 2.6h4.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>`),
+    bilanciere: icona("M3 8.5v3M5.5 6.5v7M14.5 6.5v7M17 8.5v3M5.5 10h9"),
+    sole: icona("M10 2.6v1.8M10 15.6v1.8M17.4 10h-1.8M4.4 10H2.6M15.2 4.8l-1.3 1.3M6.1 13.9l-1.3 1.3M15.2 15.2l-1.3-1.3M6.1 6.1L4.8 4.8",
+      `<circle cx="10" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/>`),
+    luna: icona("M16 11.7A6.6 6.6 0 118.3 4a5.2 5.2 0 007.7 7.7z"),
+    automatico: icona("M10 3.2a6.8 6.8 0 000 13.6z",
+      `<circle cx="10" cy="10" r="6.8" fill="none" stroke="currentColor" stroke-width="1.8"/>`),
+    esporta: icona("M10 13V3m0 0L6.5 6.5M10 3l3.5 3.5M3.5 12v3.5a1 1 0 001 1h11a1 1 0 001-1V12"),
+    importa: icona("M10 3v10m0 0l3.5-3.5M10 13L6.5 9.5M3.5 12v3.5a1 1 0 001 1h11a1 1 0 001-1V12"),
+    indietro: icona("M12 4l-6 6 6 6"),
+    rotella: icona("M10 12.6a2.6 2.6 0 100-5.2 2.6 2.6 0 000 5.2z",
+      `<path d="M16.2 12.2a1.4 1.4 0 00.28 1.54l.05.05a1.7 1.7 0 11-2.4 2.4l-.05-.05a1.4 1.4 0 00-1.54-.28 1.4 1.4 0 00-.85 1.28v.14a1.7 1.7 0 11-3.4 0v-.07a1.4 1.4 0 00-.92-1.28 1.4 1.4 0 00-1.54.28l-.05.05a1.7 1.7 0 11-2.4-2.4l.05-.05a1.4 1.4 0 00.28-1.54 1.4 1.4 0 00-1.28-.85h-.14a1.7 1.7 0 110-3.4h.07a1.4 1.4 0 001.28-.92 1.4 1.4 0 00-.28-1.54l-.05-.05a1.7 1.7 0 112.4-2.4l.05.05a1.4 1.4 0 001.54.28h.07a1.4 1.4 0 00.85-1.28v-.14a1.7 1.7 0 113.4 0v.07a1.4 1.4 0 00.85 1.28 1.4 1.4 0 001.54-.28l.05-.05a1.7 1.7 0 112.4 2.4l-.05.05a1.4 1.4 0 00-.28 1.54v.07a1.4 1.4 0 001.28.85h.14a1.7 1.7 0 110 3.4h-.07a1.4 1.4 0 00-1.28.85z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`)
+  };
 
   function uid(prefix){ return prefix + "-" + Math.random().toString(36).slice(2,9); }
   function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -488,7 +762,9 @@
 
   function defaultState(){
     return {
-      giorni: [
+      schede: [{
+        id: uid("sc"), nome: "La mia scheda", creata: todayISO(),
+        giorni: [
         {
           id: uid("g"), nome: "Giorno A — Spinta", ordine: 0,
           esercizi: [
@@ -519,15 +795,42 @@
             { id: uid("e"), nome: "Calf raise in piedi", serieTarget: 4, ripTarget: "15", note: "", storico: [] }
           ]
         }
-      ]
+        ]
+      }]
     };
+  }
+
+  // Chi ha già dei dati li ha salvati come { giorni: [...] }: li avvolgo in una scheda,
+  // così nulla va perso passando alla gestione di più schede.
+  function migra(dati){
+    // le vecchie foto non servono più: si passa alle illustrazioni
+    if (dati && dati.schede){
+      for (const sc of dati.schede)
+        for (const g of sc.giorni)
+          for (const e of g.esercizi){ delete e.immagine; delete e.immagineCercata; delete e.immagineFonte; }
+    }
+    if (dati && dati.giorni && !dati.schede){
+      return { schede: [{ id: uid("sc"), nome: "La mia scheda", creata: todayISO(), giorni: dati.giorni }] };
+    }
+    return dati;
+  }
+
+  function schedaCorrente(){
+    return state.schede.find(s => s.id === ui.schedaAperta) || null;
+  }
+  // i giorni con cui lavorano tutte le funzioni sono quelli della scheda aperta
+  function giorniCorrenti(){
+    const sc = schedaCorrente();
+    return sc ? sc.giorni : [];
   }
 
   let state = null;
   let ui = {
     selectedDayId:null, openEx:new Set(), editEx:new Set(), addExFor:null, addDayOpen:false,
     renamingDay:null, confirmDeleteDay:null, confirmDeleteEx:null, confirmDeleteHist:null,
-    storicoEspanso:new Set()
+    storicoEspanso:new Set(), storicoAperto:new Set(),
+    schedaAperta:null, nuovaSchedaAperta:false, confermaEliminaScheda:null, rinominaScheda:null,
+    impostazioniAperte:false, messaggioImport:null
   };
   let db = null;
   let dbReady = false;
@@ -546,9 +849,12 @@
       // memoria piena: gli allenamenti valgono più delle immagini, quindi si salva senza
       try{
         const senzaImmagini = {
-          giorni: state.giorni.map(g => ({
-            ...g,
-            esercizi: g.esercizi.map(({ immagine, ...resto }) => resto)
+          schede: state.schede.map(sc => ({
+            ...sc,
+            giorni: sc.giorni.map(g => ({
+              ...g,
+              esercizi: g.esercizi.map(({ immagine, ...resto }) => resto)
+            }))
           }))
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(senzaImmagini));
@@ -556,20 +862,22 @@
     }
   }
 
-  function getDay(dayId){ return state.giorni.find(g => g.id === dayId); }
+  function getDay(dayId){ return giorniCorrenti().find(g => g.id === dayId); }
   function getEx(dayId, exId){ const d = getDay(dayId); return d && d.esercizi.find(e => e.id === exId); }
 
   // ---- persistence write-through ----
   function persistDay(day){
     saveLocal();
     if (dbReady && db){
-      db.doc("giorni/" + day.id).set(day).catch(()=>{});
+      const sc = schedaCorrente();
+      if (sc) db.doc("schede/" + sc.id).set(sc).catch(()=>{});
     }
   }
   function persistDeleteDay(dayId){
     saveLocal();
     if (dbReady && db){
-      db.doc("giorni/" + dayId).delete().catch(()=>{});
+      const sc = schedaCorrente();
+      if (sc) db.doc("schede/" + sc.id).set(sc).catch(()=>{});
     }
   }
 
@@ -589,217 +897,116 @@
     return parts.join(" + ") + " per lato (bilanciere 20 kg)";
   }
 
-  // ---- immagini degli esercizi ----
-  // L'indice locale (immagini-esercizi.json) contiene nomi inglesi: questo vocabolario
-  // porta i termini da palestra italiani sul loro equivalente, così l'abbinamento regge.
-  const VOCABOLARIO = {
-    "panca":"bench press", "piana":"barbell", "inclinata":"incline", "declinata":"decline",
-    "squat":"squat", "stacco":"deadlift", "stacchi":"deadlift", "rumeno":"romanian",
-    "trazioni":"pull-up", "trazione":"pull-up", "sbarra":"pull-up",
-    "rematore":"bent over row", "pulley":"seated cable row",
-    "lat":"lat pulldown", "machine":"machine", "pulldown":"pulldown",
-    "curl":"curl", "bicipiti":"biceps", "tricipiti":"triceps",
-    "french":"lying triceps extension", "press":"press",
-    "pushdown":"triceps pushdown", "push-down":"triceps pushdown",
-    "dip":"dips", "dips":"dips", "parallele":"dips",
-    "croci":"flyes", "aperture":"flyes",
-    "alzate":"lateral raise", "laterali":"lateral raise", "frontali":"front raise",
-    "military":"military press", "lento":"shoulder press", "spinte":"press",
-    "affondi":"lunge", "affondo":"lunge", "bulgari":"bulgarian split squat",
-    "pressa":"leg press", "leg":"leg", "extension":"extension",
-    "femorali":"leg curl", "quadricipiti":"leg extension",
-    "polpacci":"calf raise", "calf":"calf raise",
-    "addominali":"crunch", "crunch":"crunch", "plank":"plank",
-    "manubri":"dumbbell", "manubrio":"dumbbell", "bilanciere":"barbell",
-    "cavi":"cable", "cavo":"cable", "macchina":"machine", "corpo":"body",
-    "scrollate":"shrug", "shrug":"shrug", "face":"face pull",
-    "hip":"hip thrust", "thrust":"hip thrust", "pullover":"pullover",
-    "arnold":"arnold press", "goblet":"goblet squat", "sumo":"sumo",
-    "hack":"hack squat", "presa":"grip", "inversa":"reverse", "larga":"wide", "stretta":"close",
-    "piedi":"standing", "seduto":"seated", "seduta":"seated", "sdraiato":"lying",
-    "terra":"lying", "panca45":"incline", "verticale":"standing"
-  };
-  // senza un movimento riconosciuto non abbiniamo nulla: meglio nessuna immagine che una sbagliata
-  const MOVIMENTI = new Set(["bench","press","squat","deadlift","pull-up","row","pulldown","curl",
-    "triceps","biceps","dips","flyes","raise","lunge","extension","crunch","plank","shrug",
-    "pullover","thrust","pushdown","pull"]);
-  const ATTREZZI = ["barbell","dumbbell","cable","machine","kettlebells"];
-  const POSTURE = ["standing","seated","lying","incline","decline","kneeling"];
-  // varianti che nessuno intende se non le nomina: evitano "panca piana" -> "guillotine press"
-  const VARIANTI = new Set(["guillotine","axle","scapular","ball","arnold","smith","band","bands",
-    "kettlebell","kettlebells","suspended","sled","landmine","zercher","jefferson","deficit",
-    "isometric","negative","partial","assisted","weighted","alternating","clean","snatch","jump",
-    "plyo","bosu","swiss","trap","hack","sumo","goblet","bulgarian","pistol","frog","spider",
-    "preacher","concentration","drag","reverse","hammer","zottman","21s","burnout",
-    "close-grip","wide-grip","rear","behind","bench","one-arm","single-arm"]);
+  // ---- illustrazioni degli esercizi ----
+  // Fonte: Everkinetic (CC BY-SA 4.0), disegni vettoriali a due colori.
+  // Si scaricano a richiesta e si ricolorano sul tema: niente foto datate, niente peso in memoria.
+  const BASE_DIS = "https://cdn.jsdelivr.net/gh/everkinetic/data@master/dist/svg/";
 
-  // Corrispondenze esatte per gli esercizi che compaiono in quasi ogni scheda italiana:
-  // qui la ricerca a punteggio sbagliava variante (panca piana -> declinata, dip -> agli anelli).
-  // Ordine importante: vince la prima riga le cui parole sono tutte presenti nel nome.
-  const CORRISPONDENZE = [
-    [["panca","inclinata","manubri"], "incline dumbbell press"],
-    [["panca","inclinata"],           "barbell incline bench press - medium grip"],
-    [["panca","manubri"],             "dumbbell bench press"],
-    [["panca"],                       "barbell bench press - medium grip"],
-    [["military","manubri"],          "dumbbell shoulder press"],
-    [["military"],                    "barbell shoulder press"],
-    [["lento","manubri"],             "dumbbell shoulder press"],
-    [["lento"],                       "barbell shoulder press"],
-    [["spalle","manubri"],            "dumbbell shoulder press"],
-    [["dip"],                         "dips - triceps version"],
-    [["parallele"],                   "dips - triceps version"],
-    [["trazioni"],                    "pullups"],
-    [["stacco"],                      "barbell deadlift"],
-    [["squat"],                       "barbell squat"],
-    [["affondi","manubri"],           "dumbbell lunges"],
-    [["affondi"],                     "barbell lunge"],
-    [["leg","curl"],                  "lying leg curls"],
-    [["femorali"],                    "lying leg curls"],
-    [["leg","extension"],             "leg extensions"],
-    [["quadricipiti"],                "leg extensions"],
-    [["leg","press"],                 "leg press"],
-    [["pressa"],                      "leg press"],
-    [["calf","seduto"],               "seated calf raise"],
-    [["calf"],                        "standing calf raises"],
-    [["polpacci"],                    "standing calf raises"],
-    [["croci","manubri"],             "dumbbell flyes"],
-    [["croci"],                       "flat bench cable flyes"],
-    [["lat","machine"],               "wide-grip lat pulldown"],
-    [["lat","pulldown"],              "wide-grip lat pulldown"],
-    [["rematore"],                    "bent over barbell row"],
-    [["curl","manubri"],              "dumbbell bicep curl"],
-    [["curl"],                        "barbell curl"],
-    [["french"],                      "lying triceps press"],
-    [["pushdown"],                    "triceps pushdown"],
-    [["push-down"],                   "triceps pushdown"],
-    [["crunch"],                      "crunches"],
-    [["addominali"],                  "crunches"],
-    [["plank"],                       "plank"],
-    [["hip","thrust"],                "barbell hip thrust"],
-    [["shrug"],                       "barbell shrug"],
-    [["scrollate"],                   "barbell shrug"],
-    [["pullover"],                    "straight-arm dumbbell pullover"],
-    [["face","pull"],                 "face pull"],
-    [["alzate","laterali"],           "side lateral raise"]
+  // Tabella curata italiano -> disegno. Prima riga che combacia, quindi le varianti
+  // più specifiche vanno prima di quelle generiche.
+  const DISEGNI = [
+    [["panca","inclinata"],   "0043"],
+    [["panca"],               "0042"],
+    [["croci","cavi"],        "0057"],
+    [["croci"],               "0056"],
+    [["aperture"],            "0056"],
+    [["military"],            "0031"],
+    [["lento"],               "0031"],
+    [["spalle","manubri"],    "0031"],
+    [["alzate","laterali"],   "0018"],
+    [["alzate","frontali"],   "0033"],
+    [["tirate","mento"],      "0014"],
+    [["face","pull"],         "0017"],
+    [["deltoidi","posteriori"], "0017"],
+    [["dip"],                 "0172"],
+    [["parallele"],           "0172"],
+    [["french"],              "0198"],
+    [["pushdown"],            "0210"],
+    [["push-down"],           "0210"],
+    [["tricipiti"],           "0198"],
+    [["trazioni"],            "0087"],
+    [["sbarra"],              "0087"],
+    [["lat","machine"],       "0096"],
+    [["lat","pulldown"],      "0096"],
+    [["pulldown"],            "0096"],
+    [["rematore"],            "0022"],
+    [["pulley"],              "0022"],
+    [["stacco","rumeno"],     "0118"],
+    [["stacco"],              "0099"],
+    [["iperestensioni"],      "0103"],
+    [["curl","panca"],        "0239"],
+    [["curl"],                "0223"],
+    [["bicipiti"],            "0223"],
+    [["squat"],               "0122"],
+    [["affondi","manubri"],   "0115"],
+    [["affondi"],             "0114"],
+    [["pressa"],              "0127"],
+    [["leg","press"],         "0127"],
+    [["leg","curl"],          "0117"],
+    [["femorali"],            "0117"],
+    [["leg","extension"],     "0142"],
+    [["quadricipiti"],        "0142"],
+    [["calf","seduto"],       "0279"],
+    [["calf"],                "0282"],
+    [["polpacci"],            "0282"],
+    [["crunch"],              "0291"],
+    [["addominali"],          "0291"],
+    [["plank"],               "0113"],
+    [["scrollate"],           "0030"],
+    [["shrug"],               "0030"]
   ];
 
-  let indiceImmagini = null;
-  const BASE_IMG = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/";
-
-  function parole(testo){
-    return String(testo || "").toLowerCase()
-      .replace(/[^a-zàèéìòù0-9\s-]/g, " ")
-      .split(/\s+/).filter(Boolean);
-  }
-
-  function traduci(nomeItaliano){
-    const fuori = [];
-    for (const p of parole(nomeItaliano)){
-      const t = VOCABOLARIO[p];
-      if (t) fuori.push(...t.split(" "));
-      else if (/^[a-z-]+$/.test(p) && p.length > 2) fuori.push(p); // termini già inglesi
-    }
-    return [...new Set(fuori)];
-  }
-
-  function cercaImmagine(nomeItaliano){
-    if (!indiceImmagini) return null;
-
-    // prima le corrispondenze certe
+  function disegnoPer(nomeItaliano){
     const testo = " " + String(nomeItaliano || "").toLowerCase() + " ";
-    for (const [chiavi, nomeCatalogo] of CORRISPONDENZE){
-      if (chiavi.every(k => testo.includes(k))){
-        const voce = indiceImmagini.find(v => v[0] === nomeCatalogo);
-        if (voce) return { url: BASE_IMG + voce[1], fonte: voce[0] };
-      }
+    for (const [chiavi, id] of DISEGNI){
+      if (chiavi.every(k => testo.includes(k))) return id;
     }
-
-    const query = traduci(nomeItaliano);
-    if (!query.some(t => MOVIMENTI.has(t))) return null;
-
-    const attrezzoChiesto = ATTREZZI.find(a => query.includes(a));
-    const posturaChiesta = POSTURE.find(p => query.includes(p));
-
-    let migliore = null, punteggioMigliore = -Infinity;
-    for (const [nome, file, attrezzo] of indiceImmagini){
-      const token = nome.split(/[^a-z0-9-]+/).filter(Boolean);
-      // il movimento deve combaciare: è questo a evitare accostamenti insensati
-      if (!query.some(q => MOVIMENTI.has(q) && token.includes(q))) continue;
-
-      let presi = 0;
-      for (const q of query) if (token.includes(q)) presi++;
-      let punteggio = presi * 2 - (token.length - presi) * 0.3;
-
-      // l'attrezzo giusto vale più di qualsiasi parola in comune
-      if (attrezzoChiesto) punteggio += (attrezzo === attrezzoChiesto) ? 2.5 : -1.5;
-
-      // "in piedi" non deve finire su "seated"
-      const posturaNome = POSTURE.find(p => token.includes(p));
-      if (posturaChiesta) punteggio += (posturaNome === posturaChiesta) ? 2 : -2;
-      else if (posturaNome) punteggio -= 0.5;
-
-      // varianti particolari: le vogliamo solo se chieste esplicitamente
-      for (const v of token) if (VARIANTI.has(v) && !query.includes(v)) punteggio -= 3;
-
-      if (punteggio > punteggioMigliore){ punteggioMigliore = punteggio; migliore = [file, nome]; }
-    }
-    return migliore ? { url: BASE_IMG + migliore[0], fonte: migliore[1] } : null;
+    return null;
   }
 
-  // scarica l'immagine e la salva dentro l'app, così resta anche senza campo in palestra
-  function scaricaComeDati(url){
-    return new Promise((risolvi, rifiuta) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        try{
-          const lato = 220;
-          const c = document.createElement("canvas");
-          c.width = lato; c.height = lato;
-          const ctx = c.getContext("2d");
-          const min = Math.min(img.width, img.height);
-          ctx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, lato, lato);
-          risolvi(c.toDataURL("image/jpeg", 0.72));
-        }catch(e){ rifiuta(e); }
-      };
-      img.onerror = rifiuta;
-      img.src = url;
-    });
+  const disegniCaricati = new Map();   // id -> markup già ricolorato
+  const disegniInCorso = new Set();
+
+  function ripulisciDisegno(svg){
+    return svg
+      .replace(/<\?xml[^>]*\?>/g, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      // il bianco sparisce, ogni altra tinta prende il colore del tema
+      .replace(/fill="#(?:fff|ffffff)"/gi, 'fill="none"')
+      .replace(/fill="#[0-9a-f]{3,6}"/gi, 'fill="currentColor"')
+      .replace(/\s+width="[^"]*"/g, "")
+      .replace(/\s+height="[^"]*"/g, "")
+      .replace(/\s+/g, " ");
   }
 
-  async function assegnaImmagine(day, ex){
-    if (ex.immagine || ex.immagineCercata) return;
-    ex.immagineCercata = true;               // un solo tentativo per esercizio
-    const trovata = cercaImmagine(ex.nome);
-    if (!trovata){ persistDay(day); return; }
-    ex.immagineFonte = trovata.fonte;        // a quale esercizio del catalogo corrisponde
+  async function caricaDisegno(id){
+    if (disegniCaricati.has(id) || disegniInCorso.has(id)) return;
+    disegniInCorso.add(id);
     try{
-      ex.immagine = await scaricaComeDati(trovata.url);
+      const r = await fetch(BASE_DIS + id + "-tension.svg");
+      if (!r.ok) throw new Error("non trovato");
+      disegniCaricati.set(id, ripulisciDisegno(await r.text()));
+      render();
     }catch(e){
-      ex.immagine = trovata.url;             // se la conversione non riesce, resta il link
+      disegniCaricati.set(id, null);    // niente disegno: resta il numero
+    }finally{
+      disegniInCorso.delete(id);
     }
-    persistDay(day);
-    render();
   }
 
-  async function caricaIndiceImmagini(){
-    if (indiceImmagini) return;
-    try{
-      const r = await fetch("./immagini-esercizi.json");
-      indiceImmagini = await r.json();
-    }catch(e){ indiceImmagini = null; }      // artifact o offline: si prosegue senza immagini
+  // assegna il disegno a un esercizio in base al nome
+  function assegnaImmagine(day, ex){
+    const id = disegnoPer(ex.nome);
+    if (ex.disegno !== id){
+      if (id) ex.disegno = id; else delete ex.disegno;
+      persistDay(day);
+    }
+    if (id) caricaDisegno(id);
   }
 
-  // completa gli esercizi già esistenti che non hanno ancora un'immagine
-  async function recuperaImmaginiMancanti(){
-    await caricaIndiceImmagini();
-    if (!indiceImmagini) return;
-    for (const day of state.giorni){
-      for (const ex of day.esercizi){
-        if (!ex.immagine && !ex.immagineCercata){
-          await assegnaImmagine(day, ex);
-        }
-      }
+  function recuperaImmaginiMancanti(){
+    for (const day of state.schede.flatMap(s => s.giorni)){
+      for (const ex of day.esercizi) assegnaImmagine(day, ex);
     }
   }
 
@@ -826,33 +1033,86 @@
     return String(valore || "").replace(/\s+/g, "").slice(0,9);
   }
 
-  // Riga aggiuntiva del superset, creata dal "+" accanto al nome.
-  function rigaMovimento(valore){
-    return `<div class="field full riga-movimento">
-      <label>In superset con</label>
-      <div class="campo-con-piu">
-        <input type="text" name="nomeExtra" value="${esc(valore || "")}" placeholder="Nome esercizio" maxlength="60">
-        <button type="button" class="btn-piu rimuovi" data-action="rimuovi-movimento" title="Togli">×</button>
+  // Un movimento nel modulo di creazione/modifica: stessi riquadri numerati
+  // che si usano per registrare la sessione, così le due schermate si somigliano.
+  // Il primo è l'esercizio principale, gli altri sono i compagni di superset.
+  // Le serie valgono per tutto l'esercizio: nel singolo stanno in fila col nome,
+  // nel superset salgono in cima perché comuni a tutti i movimenti.
+  function campoSerieHtml(valore){
+    return `<div class="field campo-serie"><label>Serie</label>
+      <input type="number" name="serieTarget" min="1" max="20" inputmode="numeric" value="${valore}" required></div>`;
+  }
+
+  function bloccoMovimento({ numero, nome, rip, principale, serie }){
+    // nell'esercizio singolo il riquadro non serve: nome, serie e ripetizioni stanno in fila
+    const campoSerie = serie !== undefined ? campoSerieHtml(serie) : "";
+    return `<div class="ss-parte blocco-movimento">
+      <div class="ss-riga-testa">
+        <span class="ss-nome"><span class="ss-num">${numero}</span>${principale ? "Esercizio" : "In superset con"}</span>
+        ${principale
+          ? `<button type="button" class="btn-piu" data-action="aggiungi-movimento" title="Aggiungi un esercizio in superset">+</button>`
+          : `<button type="button" class="btn-piu rimuovi" data-action="rimuovi-movimento" title="Togli questo esercizio">×</button>`}
+      </div>
+      <div class="ss-campi campi-movimento">
+        <div class="field"><label>Nome</label>
+          <input type="text" name="${principale ? "nome" : "nomeExtra"}" value="${esc(nome || "")}"
+                 placeholder="Nome esercizio" maxlength="60" ${principale ? "required" : ""}></div>
+        ${campoSerie}
+        <div class="field"><label>Ripetizioni</label>
+          <input type="text" name="${principale ? "ripTarget" : "ripExtra"}" value="${esc(rip || "")}"
+                 placeholder="es. 8-10" maxlength="12" ${principale ? "required" : ""}></div>
       </div>
     </div>`;
   }
 
+  // diventato superset le serie salgono in cima; tornando singolo rientrano in fila
+  function spostaSerie(form){
+    const campo = form.querySelector(".campo-serie");
+    if (!campo) return;
+    const superset = form.querySelectorAll(".movimenti-extra .blocco-movimento").length > 0;
+    const alto = form.querySelector(".slot-serie");
+    const dentro = form.querySelector(".blocco-movimento .campi-movimento");
+    if (superset && campo.parentElement !== alto){
+      alto.appendChild(campo);
+    } else if (!superset && campo.parentElement === alto){
+      dentro.insertBefore(campo, dentro.lastElementChild);   // fra nome e ripetizioni
+    }
+  }
+
+  // dopo un'aggiunta o una rimozione i numeri devono tornare consecutivi
+  function rinumeraMovimenti(form){
+    form.querySelectorAll(".movimenti-extra .ss-num").forEach((el, i) => {
+      el.textContent = i + 2;
+    });
+  }
+
   // Con uno o più movimenti aggiuntivi l'esercizio diventa un superset; senza torna singolo.
   // Lo storico già registrato non viene toccato: ogni sessione si legge dal proprio formato.
-  function applicaSuperset(ex, nomiExtra){
-    const extra = (nomiExtra || [])
-      .map(n => String(n || "").trim().slice(0,60))
-      .filter(Boolean);
+  function applicaSuperset(ex, nomiExtra, ripExtra){
+    const nomi = nomiExtra || [];
+    const rip = ripExtra || [];
+    const extra = nomi
+      .map((n, i) => ({ nome: String(n || "").trim().slice(0,60),
+                        ripTarget: String(rip[i] || "").trim().slice(0,12) }))
+      .filter(p => p.nome);
     if (extra.length){
-      ex.parti = [{ nome: ex.nome }, ...extra.map(n => ({ nome: n }))];
+      // il primo movimento tiene le ripetizioni del campo principale
+      ex.parti = [{ nome: ex.nome, ripTarget: ex.ripTarget }, ...extra];
     } else {
       delete ex.parti;
     }
   }
 
-  // legge il nome principale e tutti gli eventuali movimenti aggiuntivi di un modulo
-  function nomiExtraDi(form){
-    return new FormData(form).getAll("nomeExtra");
+  // legge i movimenti aggiuntivi di un modulo, con le rispettive ripetizioni
+  function movimentiExtraDi(form){
+    const d = new FormData(form);
+    return { nomi: d.getAll("nomeExtra"), rip: d.getAll("ripExtra") };
+  }
+
+  // ripetizioni target di una parte, con ricaduta su quelle generali dell'esercizio
+  function ripDiParte(ex, i){
+    const p = ex.parti && ex.parti[i];
+    return (p && p.ripTarget) || ex.ripTarget;
   }
 
   function ultimiDati(storico){
@@ -868,9 +1128,9 @@
     // narrow viewBox on phones so labels don't shrink when the SVG scales to the card
     const narrow = window.innerWidth <= 620;
     const w = narrow ? 320 : 560;
-    const h = narrow ? 170 : 150;
+    const h = narrow ? 128 : 118;
     // a destra resta spazio per l'etichetta del carico attuale, a sinistra per la scala
-    const padL = narrow ? 34 : 42, padR = narrow ? 52 : 60, padT = 22, padB = 28;
+    const padL = narrow ? 32 : 40, padR = narrow ? 50 : 58, padT = 18, padB = 24;
     const values = sorted.map(caricoPrincipale);
     const min = Math.min(...values), max = Math.max(...values);
     const piatto = max === min;
@@ -938,23 +1198,307 @@
     </svg>`;
   }
 
+  // ---- tema ----
+  // "auto" non mette nessun attributo, così restano validi i colori di sistema
+  function applicaTema(valore){
+    if (valore === "auto") delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = valore;
+    try{ localStorage.setItem(CHIAVE_TEMA, valore); }catch(e){}
+  }
+
+  // ---- esporta / importa ----
+  // La scheda esportata è il programma, non il diario: niente storico dei carichi.
+  function schedaEsportabile(sc){
+    return {
+      formato: "scheda-allenamento/1",
+      nome: sc.nome,
+      giorni: sc.giorni.map(g => ({
+        nome: g.nome, ordine: g.ordine,
+        esercizi: g.esercizi.map(e => ({
+          nome: e.nome,
+          serieTarget: e.serieTarget,
+          ripTarget: e.ripTarget,
+          note: e.note || "",
+          ...(eSuperset(e) ? { parti: e.parti.map(p => ({ nome: p.nome, ripTarget: p.ripTarget })) } : {})
+        }))
+      }))
+    };
+  }
+
+  async function esportaScheda(){
+    const sc = schedaCorrente();
+    if (!sc) return;
+    const testo = JSON.stringify(schedaEsportabile(sc), null, 2);
+    const nomeFile = sc.nome.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") + ".json";
+    const file = new File([testo], nomeFile, { type: "application/json" });
+
+    // sul telefono conviene il foglio di condivisione, altrove il salvataggio diretto
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      try{ await navigator.share({ files: [file], title: sc.nome }); return; }catch(e){ if (e.name === "AbortError") return; }
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url; a.download = nomeFile;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  // Legge una scheda incollata come testo o tabella.
+  // Riconosce le intestazioni di giorno e righe tipo "Panca piana 4x8-10 presa media",
+  // accettando sia spazi sia tabulazioni come separatore.
+  function leggiSchedaIncollata(testo){
+    const righe = String(testo || "").split(/\r?\n/).map(r => r.trim()).filter(Boolean);
+    const giorni = [];
+    let corrente = null;
+
+    const seriePerRip = /(\d{1,2})\s*[x×]\s*(\d{1,3}(?:\s*-\s*\d{1,3})?|max)/i;
+
+    for (const riga of righe){
+      const campi = riga.split(/\t|\s{2,}/).map(c => c.trim()).filter(Boolean);
+      const misura = riga.match(seriePerRip);
+
+      // senza serie×ripetizioni è l'intestazione di un giorno
+      if (!misura){
+        if (/^(giorno|day|scheda|settimana)/i.test(riga) || campi.length === 1){
+          corrente = { nome: riga.slice(0,60), esercizi: [] };
+          giorni.push(corrente);
+        }
+        continue;
+      }
+
+      if (!corrente){ corrente = { nome: "Giorno 1", esercizi: [] }; giorni.push(corrente); }
+
+      // il nome è ciò che precede la misura, la nota ciò che segue
+      const posizione = riga.indexOf(misura[0]);
+      const nome = riga.slice(0, posizione).replace(/[\t|;,-]+$/, "").trim();
+      const nota = riga.slice(posizione + misura[0].length).replace(/^[\t|;,-]+/, "").trim();
+      if (!nome) continue;
+
+      corrente.esercizi.push({
+        nome: nome.slice(0,60),
+        serieTarget: parseInt(misura[1], 10) || 3,
+        ripTarget: misura[2].replace(/\s+/g, "").slice(0,12),
+        note: nota.slice(0,120)
+      });
+    }
+
+    return giorni.filter(g => g.esercizi.length);
+  }
+
+  function importaDaTesto(testo){
+    let dati;
+    try{ dati = JSON.parse(testo); }catch(e){ return "Il file non è leggibile."; }
+    if (!dati || !Array.isArray(dati.giorni)) return "Questo file non contiene una scheda.";
+
+    const nuova = {
+      id: uid("sc"), nome: (dati.nome || "Scheda importata").slice(0,60), creata: todayISO(),
+      giorni: dati.giorni.map((g, i) => ({
+        id: uid("g"), nome: (g.nome || "Giorno").slice(0,60), ordine: g.ordine ?? i,
+        esercizi: (g.esercizi || []).map(e => {
+          const ex = {
+            id: uid("e"), nome: (e.nome || "Esercizio").slice(0,60),
+            serieTarget: parseInt(e.serieTarget,10) || 3,
+            ripTarget: String(e.ripTarget || "10").slice(0,12),
+            note: String(e.note || "").slice(0,120),
+            storico: []                      // il diario resta quello di chi importa
+          };
+          if (Array.isArray(e.parti) && e.parti.length > 1){
+            ex.parti = e.parti.map(p => ({ nome: String(p.nome || "").slice(0,60),
+                                           ripTarget: String(p.ripTarget || "").slice(0,12) }));
+          }
+          return ex;
+        })
+      }))
+    };
+    state.schede.push(nuova);
+    saveLocal();
+    if (dbReady && db) db.doc("schede/" + nuova.id).set(nuova).catch(()=>{});
+    recuperaImmaginiMancanti();
+    return null;
+  }
+
   // ---- rendering ----
   function render(){
     if (!state) return;
+
+    const oggi = new Date().toLocaleDateString("it-IT", { weekday:"long", day:"numeric", month:"long" });
+    document.getElementById("oggi").textContent = oggi;
+
+    const sc = schedaCorrente();
+    const home = document.getElementById("home");
+    const tabs = document.getElementById("dayTabs");
+    const zona = document.getElementById("addDayZone");
+    const pannello = document.getElementById("dayPanel");
+
+    const saluto = new Date().getHours() < 18 ? "Buongiorno," : "Buonasera,";
+    document.getElementById("titolo").textContent = sc ? sc.nome : saluto;
+    document.getElementById("azioniTitolo").innerHTML = "";
+    renderSettimana(document.getElementById("settimana"), !sc);
+    renderImpostazioni();
+    document.getElementById("sottotitolo").textContent = sc
+      ? "Carichi, serie e progressioni"
+      : "Cosa alleniamo oggi?";
+    document.getElementById("azioniTop").innerHTML = sc
+      ? `<button class="btn-icona" data-action="torna-schede" title="Le mie schede" aria-label="Torna alle schede">${ICONE.indietro}</button>
+         <button class="btn-icona" data-action="esporta-scheda" title="Esporta la scheda" aria-label="Esporta la scheda">${ICONE.esporta}</button>`
+      : `<button class="btn-icona" data-action="toggle-impostazioni" title="Impostazioni" aria-label="Impostazioni">${ICONE.rotella}</button>`;
+
+    // senza scheda aperta si vede l'elenco, altrimenti il contenuto della scheda
+    home.hidden = !!sc;
+    tabs.hidden = !sc;
+    zona.hidden = !sc;
+    pannello.hidden = !sc;
+
+    if (!sc){ renderHome(home); return; }
+
     if (!ui.selectedDayId || !getDay(ui.selectedDayId)){
-      ui.selectedDayId = state.giorni[0] ? state.giorni[0].id : null;
+      ui.selectedDayId = giorniCorrenti()[0] ? giorniCorrenti()[0].id : null;
     }
     renderTabs();
     renderAddDayZone();
     renderDayPanel();
   }
 
+  function renderImpostazioni(){
+    const velo = document.getElementById("velo");
+    velo.hidden = !ui.impostazioniAperte;
+    document.body.classList.toggle("bloccato", ui.impostazioniAperte);
+    if (!ui.impostazioniAperte) return;
+
+    const tema = localStorage.getItem(CHIAVE_TEMA) || "auto";
+    document.getElementById("foglioCorpo").innerHTML = `
+      <span class="eyebrow">Tema</span>
+      <div class="scelta-tema" role="group" aria-label="Tema">
+        ${[["auto","Automatico",ICONE.automatico],["light","Chiaro",ICONE.sole],["dark","Scuro",ICONE.luna]].map(([v,t,ic]) =>
+          `<button class="tema-btn ${tema === v ? "attiva" : ""}" data-action="imposta-tema" data-tema="${v}"
+                   title="${t}" aria-label="${t}" aria-pressed="${tema === v}">${ic}</button>`).join("")}
+      </div>
+
+      <span class="eyebrow">Importa una scheda</span>
+      <p class="nota-foglio">Incolla qui la tabella della scheda: una riga per esercizio, i giorni come intestazione.</p>
+      <form data-form="importa-testo">
+        <textarea name="testo" class="area-import" rows="6" placeholder="Giorno A — Spinta&#10;Panca piana  4x8-10  presa media&#10;Croci ai cavi  3x12-15"></textarea>
+        <div class="foglio-azioni">
+          <button type="submit" class="btn primary small">${ICONE.importa}Importa</button>
+          <button type="button" class="btn small" data-action="importa-scheda">Da file</button>
+        </div>
+      </form>
+      <input type="file" id="fileImport" accept="application/json,.json" hidden>
+      ${ui.messaggioImport ? `<div class="empty-note avviso">${esc(ui.messaggioImport)}</div>` : ""}
+
+      <span class="eyebrow">Crediti</span>
+      <p class="nota-foglio">Illustrazioni degli esercizi:
+        <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a>,
+        licenza CC BY-SA 4.0.</p>
+    `;
+  }
+
+  // Striscia della settimana corrente: segna i giorni in cui risulta un allenamento.
+  // Si basa sulle date delle sessioni registrate, in tutte le schede.
+  function renderSettimana(contenitore, mostra){
+    contenitore.hidden = !mostra;
+    if (!mostra) return;
+
+    const allenati = new Set(
+      state.schede.flatMap(sc => sc.giorni)
+        .flatMap(g => g.esercizi)
+        .flatMap(e => e.storico || [])
+        .map(s => s.data)
+    );
+
+    const oggi = new Date();
+    const giornoSettimana = (oggi.getDay() + 6) % 7;          // lunedì = 0
+    const lunedi = new Date(oggi);
+    lunedi.setDate(oggi.getDate() - giornoSettimana);
+
+    const iniziali = ["L","M","M","G","V","S","D"];
+    const celle = iniziali.map((lettera, i) => {
+      const giorno = new Date(lunedi);
+      giorno.setDate(lunedi.getDate() + i);
+      const dataCella = giorno.getFullYear() + "-" +
+        String(giorno.getMonth()+1).padStart(2,"0") + "-" +
+        String(giorno.getDate()).padStart(2,"0");
+      const classi = ["giorno-cella"];
+      if (allenati.has(dataCella)) classi.push("allenato");
+      if (i === giornoSettimana) classi.push("oggi");
+      return `<div class="${classi.join(" ")}">
+        <span class="giorno-lettera">${lettera}</span>
+        <span class="giorno-numero">${giorno.getDate()}</span>
+      </div>`;
+    }).join("");
+
+    // confronto fra date in formato testo: evita gli scherzi dell'ora del giorno
+    const iso = (d) => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+    const domenica = new Date(lunedi); domenica.setDate(lunedi.getDate() + 6);
+    const quanti = [...allenati].filter(d => d >= iso(lunedi) && d <= iso(domenica)).length;
+
+    contenitore.className = "blocco-settimana";
+    contenitore.innerHTML = `
+      <div class="settimana-testa">
+        <span class="eyebrow">La tua settimana</span>
+        <span class="settimana-conto">${quanti ? quanti + (quanti === 1 ? " allenamento" : " allenamenti") : "nessun allenamento"}</span>
+      </div>
+      <div class="settimana">${celle}</div>`;
+  }
+
+  function renderHome(contenitore){
+    const carte = state.schede.map(sc => {
+      const esercizi = sc.giorni.reduce((n,g) => n + g.esercizi.length, 0);
+      const sessioni = sc.giorni.flatMap(g => g.esercizi.flatMap(e => e.storico || []));
+      const ultima = sessioni.length ? sessioni.map(s => s.data).sort().slice(-1)[0] : null;
+      if (ui.rinominaScheda === sc.id){
+        return `<form class="add-day-form scheda-rinomina" data-form="rinomina-scheda" data-scheda="${sc.id}">
+          <input type="text" name="nome" value="${esc(sc.nome)}" required maxlength="60" autofocus>
+          <button type="submit" class="btn primary small">Salva</button>
+          <button type="button" class="btn ghost small" data-action="annulla-rinomina-scheda">Annulla</button>
+        </form>`;
+      }
+      return `<div class="scheda-carta" data-action="apri-scheda" data-scheda="${sc.id}">
+        <div class="scheda-alto">
+          <div class="scheda-azioni">
+            <button class="btn-icona" data-action="rinomina-scheda" data-scheda="${sc.id}" title="Rinomina" aria-label="Rinomina scheda">${ICONE.matita}</button>
+            <button class="btn-icona" data-action="elimina-scheda" data-scheda="${sc.id}" title="Elimina" aria-label="Elimina scheda">${ICONE.cestino}</button>
+          </div>
+        </div>
+        <span class="scheda-nome">${esc(sc.nome)}</span>
+        <span class="scheda-dati">${sc.giorni.length} giorni · ${esercizi} esercizi</span>
+        <span class="pillola">${ICONE.orologio}${ultima ? "Ultimo allenamento " + fmtDate(ultima) : "Nessuna sessione registrata"}</span>
+      </div>`;
+    }).join("");
+
+    const conferma = ui.confermaEliminaScheda
+      ? (() => {
+          const s = state.schede.find(x => x.id === ui.confermaEliminaScheda);
+          return s ? `<div class="confirm-row scheda-conferma">
+            <span>Eliminare "${esc(s.nome)}" con tutti i suoi allenamenti?</span>
+            <button class="btn small danger" data-action="elimina-scheda-conferma" data-scheda="${s.id}">Sì, elimina</button>
+            <button class="btn ghost small" data-action="elimina-scheda-annulla">Annulla</button>
+          </div>` : "";
+        })()
+      : "";
+
+    const avviso = ui.messaggioImport ? `<div class="empty-note avviso">${esc(ui.messaggioImport)}</div>` : "";
+
+    contenitore.innerHTML = `
+      ${avviso}
+      ${conferma}
+      <div class="schede-elenco">${carte || '<div class="empty-note">Nessuna scheda. Creane una qui sotto.</div>'}</div>
+      ${ui.nuovaSchedaAperta
+        ? `<form class="add-day-form" data-form="nuova-scheda">
+             <input type="text" name="nome" placeholder="Nome della scheda, es. Massa autunno" required maxlength="60" autofocus>
+             <button type="submit" class="btn primary small">Crea</button>
+             <button type="button" class="btn ghost small" data-action="toggle-nuova-scheda">Annulla</button>
+           </form>`
+        : `<button class="btn primary" data-action="toggle-nuova-scheda">${ICONE.piu}Nuova scheda</button>`}
+    `;
+  }
+
   function renderTabs(){
     const tabs = document.getElementById("dayTabs");
-    const sorted = [...state.giorni].sort((a,b) => a.ordine - b.ordine);
+    const sorted = [...giorniCorrenti()].sort((a,b) => a.ordine - b.ordine);
     tabs.innerHTML = sorted.map(g => `
       <button class="day-tab ${g.id === ui.selectedDayId ? "active" : ""}" data-action="select-day" data-day="${g.id}">${esc(g.nome)}</button>
-    `).join("") + `<button class="day-tab-add" data-action="toggle-add-day">+ Giorno</button>`;
+    `).join("") + `<button class="day-tab-add" data-action="toggle-add-day">${ICONE.piu}Giorno</button>`;
   }
 
   function renderAddDayZone(){
@@ -970,7 +1514,7 @@
 
   function renderDayPanel(){
     const panel = document.getElementById("dayPanel");
-    if (!state.giorni.length){
+    if (!giorniCorrenti().length){
       panel.innerHTML = `<div class="empty-state"><h2>Nessun giorno impostato</h2><p>Aggiungi il primo giorno di allenamento per iniziare.</p></div>`;
       return;
     }
@@ -993,10 +1537,10 @@
       headerRight = `
         <div class="day-azioni">
           <button class="btn-icona" data-action="rename-day" data-day="${day.id}" title="Rinomina giorno" aria-label="Rinomina giorno">
-            <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M11.5 1.8l2.7 2.7-8 8-3.4.7.7-3.4 8-8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            ${ICONE.matita}
           </button>
           <button class="btn-icona" data-action="delete-day" data-day="${day.id}" title="Elimina giorno" aria-label="Elimina giorno">
-            <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 9h5.8l.6-9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            ${ICONE.cestino}
           </button>
         </div>`;
     }
@@ -1021,22 +1565,17 @@
       <div class="add-ex-zone">
         ${ui.addExFor === day.id ? `
           <form class="add-ex-form" data-form="add-ex" data-day="${day.id}">
-            <div class="field full">
-              <label>Esercizio</label>
-              <div class="campo-con-piu">
-                <input type="text" name="nome" placeholder="Nome esercizio" required maxlength="60">
-                <button type="button" class="btn-piu" data-action="aggiungi-movimento" title="Aggiungi un esercizio in superset">+</button>
-              </div>
-            </div>
+            ${bloccoMovimento({ numero: 1, nome: "", rip: "10", principale: true, serie: 3 })}
             <div class="movimenti-extra"></div>
-            <div class="field"><label>Serie</label><input type="number" name="serieTarget" min="1" max="20" inputmode="numeric" value="3" required></div>
-            <div class="field"><label>Ripetizioni</label><input type="text" name="ripTarget" placeholder="es. 8-10" value="10" required maxlength="12"></div>
-            <div class="field full"><label>Note (opzionale)</label><input type="text" name="note" placeholder="es. presa larga, tempo 3-1-1" maxlength="120"></div>
+            <div class="riga-serie-note">
+              <div class="slot-serie"></div>
+              <div class="field"><label>Note (opzionale)</label><input type="text" name="note" placeholder="es. presa larga, tempo 3-1-1" maxlength="120"></div>
+            </div>
             <div style="display:flex;gap:8px;">
               <button type="submit" class="btn primary small">Aggiungi</button>
               <button type="button" class="btn ghost small" data-action="toggle-add-ex" data-day="${day.id}">Annulla</button>
             </div>
-          </form>` : `<button class="btn" data-action="toggle-add-ex" data-day="${day.id}">+ Aggiungi esercizio</button>`}
+          </form>` : `<button class="btn" data-action="toggle-add-ex" data-day="${day.id}">${ICONE.piu}Aggiungi esercizio</button>`}
       </div>
     `;
   }
@@ -1088,19 +1627,18 @@
            <button type="submit" class="btn primary small">Salva</button>`;
       editHtml = `
         <form class="edit-form" data-form="edit-ex" data-day="${day.id}" data-ex="${ex.id}">
-          <div class="field full">
-            <label>Nome esercizio</label>
-            <div class="campo-con-piu">
-              <input type="text" name="nome" value="${esc(ex.nome)}" required maxlength="60">
-              <button type="button" class="btn-piu" data-action="aggiungi-movimento" title="Aggiungi un esercizio in superset">+</button>
-            </div>
-          </div>
+          ${bloccoMovimento({ numero: 1, nome: ex.nome, rip: ripDiParte(ex, 0), principale: true,
+                              serie: eSuperset(ex) ? undefined : ex.serieTarget })}
           <div class="movimenti-extra">${
-            eSuperset(ex) ? ex.parti.slice(1).map(p => rigaMovimento(p.nome)).join("") : ""
+            eSuperset(ex)
+              ? ex.parti.slice(1).map((p, i) =>
+                  bloccoMovimento({ numero: i + 2, nome: p.nome, rip: p.ripTarget })).join("")
+              : ""
           }</div>
-          <div class="field"><label>Serie target</label><input type="number" name="serieTarget" min="1" max="20" value="${ex.serieTarget}" required></div>
-          <div class="field"><label>Ripetizioni target</label><input type="text" name="ripTarget" value="${esc(ex.ripTarget)}" required maxlength="12"></div>
-          <div class="field full"><label>Note</label><input type="text" name="note" value="${esc(ex.note || "")}" maxlength="120" placeholder="es. presa larga, tempo 3-1-1"></div>
+          <div class="riga-serie-note">
+            <div class="slot-serie">${eSuperset(ex) ? campoSerieHtml(ex.serieTarget) : ""}</div>
+            <div class="field"><label>Note</label><input type="text" name="note" value="${esc(ex.note || "")}" maxlength="120" placeholder="es. presa larga, tempo 3-1-1"></div>
+          </div>
           <div class="edit-form-actions">
             ${actionsHtml}
           </div>
@@ -1114,10 +1652,21 @@
       if (l.parti && l.parti[i]) return l.parti[i].carico;
       return i === 0 ? (l.carico || "") : "";
     };
+    // il segnaposto suggerisce le ripetizioni previste dalla scheda per quel movimento
     const campoRip = (nome, i) => `<div class="field"><label>Ripetizioni</label>
-      <input type="text" name="${nome}" pattern="[0-9]{1,3}(\\s?-\\s?[0-9]{1,3})?" placeholder="8 o 8-10" maxlength="9" required></div>`;
+      <input type="text" name="${nome}" pattern="[0-9]{1,3}(\\s?-\\s?[0-9]{1,3})?" placeholder="${esc(ripDiParte(ex, i) || "8 o 8-10")}" maxlength="9" required></div>`;
     const campoCarico = (nome, i) => `<div class="field mono"><label>Carico (kg)</label>
       <input type="number" name="${nome}" step="0.5" min="0" inputmode="decimal" placeholder="${ultimoCarico(i) || 0}" required></div>`;
+
+    // i due pulsanti dell'azione: registrare, oppure consultare quanto già fatto
+    const storicoAperto = ui.storicoAperto.has(ex.id);
+    const quante = ex.storico.length;
+    const azioni = `<div class="azioni-sessione">
+        <button type="submit" class="btn primary small">${ICONE.spunta}Registra sessione</button>
+        <button type="button" class="btn small" data-action="toggle-storico-aperto" data-ex="${ex.id}">
+          ${storicoAperto ? ICONE.chiudi + "Chiudi" : ICONE.grafico + `Storico${quante ? " (" + quante + ")" : ""}`}
+        </button>
+      </div>`;
 
     let logForm;
     if (eSuperset(ex)){
@@ -1134,9 +1683,7 @@
         <form class="log-form superset" data-form="log-session" data-day="${day.id}" data-ex="${ex.id}">
           ${parti}
           <div class="field ss-serie"><label>Serie (per entrambi)</label><input type="number" name="serie" min="1" max="20" inputmode="numeric" value="${ex.serieTarget}" required></div>
-          <div class="submit-cell">
-            <button type="submit" class="btn primary small">Registra sessione</button>
-          </div>
+          <div class="submit-cell">${azioni}</div>
         </form>`;
     } else {
       logForm = `
@@ -1146,7 +1693,7 @@
           ${campoRip("ripetizioni", 0)}
           <div class="submit-cell">
             <span class="plate-hint" data-plate-hint></span>
-            <button type="submit" class="btn primary small">Registra sessione</button>
+            ${azioni}
           </div>
         </form>`;
     }
@@ -1193,25 +1740,28 @@
     return `
       <div class="ex-card ${open ? "open" : ""}" data-ex-card="${ex.id}">
         <div class="ex-head" data-action="toggle-ex" data-ex="${ex.id}">
-          <span class="ex-thumb">${
-            ex.immagine
-              ? `<img src="${ex.immagine}" alt="" loading="lazy">`
-              : `<span class="ex-num">${posizione}</span>`
+          <span class="ex-thumb${ex.disegno && disegniCaricati.get(ex.disegno) ? " con-disegno" : ""}">${
+            (ex.disegno && disegniCaricati.get(ex.disegno)) || `<span class="ex-num">${posizione}</span>`
           }</span>
-          <div class="ex-name">${
+          <div class="ex-testo">
+            <div class="ex-name">${
             eSuperset(ex)
               ? ex.parti.map(p => esc(p.nome)).join(`<span class="ss-piu">+</span>`) + `<span class="ss-tag">superset</span>`
               : esc(ex.nome)
           }${ex.note ? `<span class="sub">${esc(ex.note)}</span>` : ""}</div>
-          <div class="ex-target">${ex.serieTarget}×${esc(ex.ripTarget)}</div>
+            <div class="ex-target">${ex.serieTarget}×${
+              eSuperset(ex)
+                ? ex.parti.map((p,i) => esc(ripDiParte(ex,i))).join(" / ")
+                : esc(ex.ripTarget)
+            }</div>
+          </div>
           <div class="ex-last">${lastBlock}</div>
           ${open ? `<button class="btn ghost small ex-edit-btn" data-action="toggle-edit-ex" data-ex="${ex.id}">${editing ? "Annulla" : "Modifica"}</button>` : ""}
         </div>
         <div class="ex-body">
           ${editHtml}
           ${editing ? "" : logForm}
-          ${chartBlock}
-          ${histBlock}
+          ${!editing && storicoAperto ? `<div class="storico-pannello">${chartBlock}${histBlock}</div>` : ""}
         </div>
       </div>`;
   }
@@ -1232,7 +1782,8 @@
     if (rip) ex.ripTarget = rip.slice(0,12);
     ex.serieTarget = parseInt(d.serieTarget,10) || ex.serieTarget;
     ex.note = (d.note || "").trim().slice(0,120);
-    applicaSuperset(ex, nomiExtraDi(form));
+    const mov = movimentiExtraDi(form);
+    applicaSuperset(ex, mov.nomi, mov.rip);
 
     ui.editEx.delete(exId);
     persistDay(day);
@@ -1244,7 +1795,63 @@
     if (!t) return;
     const action = t.getAttribute("data-action");
 
-    if (action === "select-day"){
+    if (action === "apri-scheda"){
+      ui.schedaAperta = t.getAttribute("data-scheda");
+      ui.selectedDayId = null; ui.openEx.clear();
+      render();
+    } else if (action === "torna-schede"){
+      salvaModificheAperte();
+      ui.schedaAperta = null; ui.openEx.clear();
+      render();
+    } else if (action === "esporta-scheda"){
+      esportaScheda();
+    } else if (action === "toggle-impostazioni"){
+      ui.impostazioniAperte = !ui.impostazioniAperte;
+      render();
+    } else if (action === "imposta-tema"){
+      applicaTema(t.getAttribute("data-tema"));
+      render();
+    } else if (action === "importa-scheda"){
+      const input = document.getElementById("fileImport");
+      input.onchange = () => {
+        const file = input.files[0];
+        if (!file) return;
+        const lettore = new FileReader();
+        lettore.onload = () => {
+          const errore = importaDaTesto(lettore.result);
+          ui.messaggioImport = errore || "Scheda importata.";
+          ui.impostazioniAperte = !errore ? false : true;
+          render();
+          setTimeout(() => { ui.messaggioImport = null; render(); }, 4000);
+        };
+        lettore.readAsText(file);
+      };
+      input.click();
+    } else if (action === "toggle-nuova-scheda"){
+      ui.nuovaSchedaAperta = !ui.nuovaSchedaAperta;
+      render();
+    } else if (action === "rinomina-scheda"){
+      const sc = state.schede.find(x => x.id === t.getAttribute("data-scheda"));
+      ui.rinominaScheda = sc.id;
+      render();
+    } else if (action === "annulla-rinomina-scheda"){
+      ui.rinominaScheda = null;
+      render();
+    } else if (action === "elimina-scheda"){
+      ui.confermaEliminaScheda = t.getAttribute("data-scheda");
+      render();
+    } else if (action === "elimina-scheda-annulla"){
+      ui.confermaEliminaScheda = null;
+      render();
+    } else if (action === "elimina-scheda-conferma"){
+      const id = t.getAttribute("data-scheda");
+      state.schede = state.schede.filter(x => x.id !== id);
+      ui.confermaEliminaScheda = null;
+      if (ui.schedaAperta === id) ui.schedaAperta = null;
+      saveLocal();
+      if (dbReady && db) db.doc("schede/" + id).delete().catch(()=>{});
+      render();
+    } else if (action === "select-day"){
       salvaModificheAperte();
       ui.selectedDayId = t.getAttribute("data-day");
       ui.openEx.clear();
@@ -1277,10 +1884,20 @@
       // lavoro diretto sul modulo: un nuovo render cancellerebbe quanto già scritto
       const form = t.closest("form");
       const zona = form.querySelector(".movimenti-extra");
-      zona.insertAdjacentHTML("beforeend", rigaMovimento(""));
-      zona.querySelector(".riga-movimento:last-child input").focus();
+      zona.insertAdjacentHTML("beforeend",
+        bloccoMovimento({ numero: zona.children.length + 2, nome: "", rip: "" }));
+      rinumeraMovimenti(form);
+      spostaSerie(form);
+      zona.querySelector(".blocco-movimento:last-child input").focus();
     } else if (action === "rimuovi-movimento"){
-      t.closest(".riga-movimento").remove();
+      const form = t.closest("form");
+      t.closest(".blocco-movimento").remove();
+      rinumeraMovimenti(form);
+      spostaSerie(form);
+    } else if (action === "toggle-storico-aperto"){
+      const id = t.getAttribute("data-ex");
+      if (ui.storicoAperto.has(id)) ui.storicoAperto.delete(id); else ui.storicoAperto.add(id);
+      render();
     } else if (action === "toggle-storico"){
       const id = t.getAttribute("data-ex");
       if (ui.storicoEspanso.has(id)) ui.storicoEspanso.delete(id); else ui.storicoEspanso.add(id);
@@ -1306,7 +1923,7 @@
       render();
     } else if (action === "delete-day-confirm"){
       const dayId = t.getAttribute("data-day");
-      state.giorni = state.giorni.filter(g => g.id !== dayId);
+      schedaCorrente().giorni = giorniCorrenti().filter(g => g.id !== dayId);
       persistDeleteDay(dayId);
       ui.confirmDeleteDay = null;
       if (ui.selectedDayId === dayId) ui.selectedDayId = null;
@@ -1351,7 +1968,40 @@
     const formType = form.getAttribute("data-form");
     const data = Object.fromEntries(new FormData(form).entries());
 
-    if (formType === "rename-day"){
+    if (formType === "importa-testo"){
+      const testo = (data.testo || "").trim();
+      const link = testo.match(/https?:\/\/\S*canva\.\S+/i);
+      if (link && testo.replace(link[0], "").trim().length < 20){
+        ui.messaggioImport = "Il link di Canva non può essere letto dall'app: apri la scheda su Canva, seleziona la tabella, copiala e incollala qui.";
+      } else {
+        const giorni = leggiSchedaIncollata(testo);
+        if (!giorni.length){
+          ui.messaggioImport = "Non ho riconosciuto esercizi. Ogni riga deve contenere serie e ripetizioni, per esempio: Panca piana 4x8-10.";
+        } else {
+          const esercizi = giorni.reduce((n,g) => n + g.esercizi.length, 0);
+          importaDaTesto(JSON.stringify({ nome: "Scheda importata", giorni }));
+          ui.messaggioImport = `Importata: ${giorni.length} giorni, ${esercizi} esercizi.`;
+          ui.impostazioniAperte = false;
+        }
+      }
+      render();
+    } else if (formType === "rinomina-scheda"){
+      const sc = state.schede.find(x => x.id === form.getAttribute("data-scheda"));
+      const nuovo = data.nome.trim();
+      if (nuovo) sc.nome = nuovo.slice(0,60);
+      ui.rinominaScheda = null;
+      saveLocal();
+      if (dbReady && db) db.doc("schede/" + sc.id).set(sc).catch(()=>{});
+      render();
+    } else if (formType === "nuova-scheda"){
+      const nuova = { id: uid("sc"), nome: data.nome.trim().slice(0,60), creata: todayISO(), giorni: [] };
+      state.schede.push(nuova);
+      ui.nuovaSchedaAperta = false;
+      ui.schedaAperta = nuova.id;          // si entra subito nella scheda appena creata
+      saveLocal();
+      if (dbReady && db) db.doc("schede/" + nuova.id).set(nuova).catch(()=>{});
+      render();
+    } else if (formType === "rename-day"){
       const dayId = form.getAttribute("data-day");
       const day = getDay(dayId);
       const nuovo = data.nome.trim();
@@ -1360,9 +2010,9 @@
       persistDay(day);
       render();
     } else if (formType === "add-day"){
-      const maxOrdine = state.giorni.reduce((m,g) => Math.max(m,g.ordine), -1);
+      const maxOrdine = giorniCorrenti().reduce((m,g) => Math.max(m,g.ordine), -1);
       const nuovo = { id: uid("g"), nome: data.nome.trim().slice(0,60), ordine: maxOrdine+1, esercizi: [] };
-      state.giorni.push(nuovo);
+      schedaCorrente().giorni.push(nuovo);
       ui.addDayOpen = false;
       ui.selectedDayId = nuovo.id;
       persistDay(nuovo);
@@ -1376,7 +2026,8 @@
         ripTarget: data.ripTarget.trim().slice(0,12),
         note: (data.note || "").trim().slice(0,120), storico: []
       };
-      applicaSuperset(nuovo, nomiExtraDi(form));
+      const mov = movimentiExtraDi(form);
+      applicaSuperset(nuovo, mov.nomi, mov.rip);
       day.esercizi.push(nuovo);
       ui.addExFor = null;
       persistDay(day);
@@ -1390,14 +2041,12 @@
       ex.serieTarget = parseInt(data.serieTarget,10) || 1;
       ex.ripTarget = data.ripTarget.trim().slice(0,12);
       ex.note = (data.note || "").trim().slice(0,120);
-      applicaSuperset(ex, nomiExtraDi(form));
+      const mov = movimentiExtraDi(form);
+    applicaSuperset(ex, mov.nomi, mov.rip);
       ui.editEx.delete(exId);
       persistDay(day);
       render();
-      if (ex.nome !== nomePrecedente){       // nome nuovo, immagine da rivedere
-        delete ex.immagine; delete ex.immagineCercata;
-        assegnaImmagine(day, ex);
-      }
+      if (ex.nome !== nomePrecedente) assegnaImmagine(day, ex);   // nome nuovo, disegno da rivedere
     } else if (formType === "log-session"){
       const dayId = form.getAttribute("data-day"), exId = form.getAttribute("data-ex");
       const day = getDay(dayId), ex = getEx(dayId, exId);
@@ -1421,7 +2070,8 @@
 
   // ---- boot ----
   function boot(){
-    state = loadLocal() || defaultState();
+    applicaTema(localStorage.getItem(CHIAVE_TEMA) || "auto");
+    state = migra(loadLocal()) || defaultState();
     if (!loadLocal()) saveLocal();
     render();
     connectDb();
@@ -1434,23 +2084,19 @@
       if (!namespace) return;
       db = namespace;
       try{
-        const snap = await db.collection("giorni").get();
+        const snap = await db.collection("schede").get();
         if (snap.empty){
-          for (const g of state.giorni){
-            await db.doc("giorni/" + g.id).set(g).catch(()=>{});
+          for (const sc of state.schede){
+            await db.doc("schede/" + sc.id).set(sc).catch(()=>{});
           }
         } else {
-          const remoteDays = snap.docs.map(d => d.data()).filter(Boolean);
-          remoteDays.sort((a,b) => (a.ordine||0) - (b.ordine||0));
-          state = { giorni: remoteDays };
+          state = { schede: snap.docs.map(d => d.data()).filter(Boolean) };
           saveLocal();
           render();
         }
         dbReady = true;
-        db.collection("giorni").onSnapshot((qsnap) => {
-          const remoteDays = qsnap.docs.map(d => d.data()).filter(Boolean);
-          remoteDays.sort((a,b) => (a.ordine||0) - (b.ordine||0));
-          state = { giorni: remoteDays };
+        db.collection("schede").onSnapshot((qsnap) => {
+          state = { schede: qsnap.docs.map(d => d.data()).filter(Boolean) };
           saveLocal();
           render();
         }, () => {});
@@ -1483,52 +2129,115 @@
   "use strict";
 
   const bolla = document.getElementById("cronoBolla");
+  const bollaDentro = document.getElementById("cronoBollaDentro");
+  const anelloBolla = document.getElementById("cronoAnelloBolla");
   const riquadro = document.getElementById("cronoRiquadro");
+  const anello = document.getElementById("cronoAnello");
   const display = document.getElementById("cronoTempo");
   const bottoneAvvia = document.getElementById("cronoAvvia");
+  const quadrante = document.getElementById("cronoQuadrante");
+  const ruote = document.getElementById("cronoRuote");
+  const ruotaMinuti = document.getElementById("ruotaMinuti");
+  const ruotaSecondi = document.getElementById("ruotaSecondi");
+  const ALTEZZA_VOCE = 34;
 
-  let trascorso = 0;        // millisecondi accumulati nelle sessioni precedenti
+  const ICONA = bollaDentro.innerHTML;
+  const GIRO_BOLLA = 2 * Math.PI * 24;    // circonferenze degli anelli
+  const GIRO_GRANDE = 2 * Math.PI * 58;
+
+  let durata = 90000;       // recupero scelto, in millisecondi
+  let restante = durata;    // quanto manca
   let partenza = 0;         // istante dell'ultimo avvio
   let inCorso = false;
   let battito = null;
+  let suono = null;         // creato al primo avvio, cioè dentro un gesto dell'utente
 
-  function totale(){
-    return trascorso + (inCorso ? performance.now() - partenza : 0);
+  function mancante(){
+    if (!inCorso) return restante;
+    return Math.max(0, restante - (performance.now() - partenza));
   }
 
   function formatta(ms){
-    const secondiTotali = Math.floor(ms / 1000);
-    const minuti = Math.floor(secondiTotali / 60);
-    const secondi = secondiTotali % 60;
-    return minuti + ":" + String(secondi).padStart(2, "0");
+    const secondi = Math.ceil(ms / 1000);
+    return Math.floor(secondi / 60) + ":" + String(secondi % 60).padStart(2, "0");
+  }
+
+  function disegnaAnello(cerchio, giro, frazione){
+    cerchio.style.strokeDasharray = giro;
+    cerchio.style.strokeDashoffset = giro * (1 - frazione);
   }
 
   function aggiorna(){
-    const testo = formatta(totale());
-    display.textContent = testo;
-    // a riquadro chiuso il tempo resta visibile sulla bolla, così non lo si perde di vista
+    const ms = mancante();
+    const frazione = durata ? (durata - ms) / durata : 0;   // l'anello si completa col tempo
+    const finito = ms <= 0 && !inCorso;
+
+    display.textContent = formatta(ms);
+    disegnaAnello(anello, GIRO_GRANDE, frazione);
+    disegnaAnello(anelloBolla, GIRO_BOLLA, frazione);
+
+    // a timer fermo e non ancora avviato l'anello sparisce: resta la sola icona
+    bolla.classList.toggle("inattivo", !inCorso && ms >= durata);
     bolla.classList.toggle("in-corso", inCorso);
-    if (riquadro.hidden && (inCorso || trascorso > 0)){
-      bolla.textContent = testo;
+    bolla.classList.toggle("finito", finito && restante <= 0);
+    riquadro.classList.toggle("finito", finito && restante <= 0);
+
+    // prima di partire si vedono le ruote, una volta avviato il quadrante
+    const avviato = inCorso || restante < durata;
+    quadrante.hidden = !avviato;
+    ruote.hidden = avviato;
+
+    // a riquadro chiuso la bolla mostra il tempo che manca, non l'icona
+    if (riquadro.hidden && (inCorso || ms < durata)){
+      bollaDentro.textContent = formatta(ms);
     } else if (riquadro.hidden){
-      bolla.innerHTML = ICONA;
+      bollaDentro.innerHTML = ICONA;
     }
   }
 
-  const ICONA = bolla.innerHTML;
+  function segnale(){
+    try{
+      suono = suono || new (window.AudioContext || window.webkitAudioContext)();
+      const osc = suono.createOscillator();
+      const vol = suono.createGain();
+      osc.frequency.value = 880;
+      vol.gain.setValueAtTime(0.0001, suono.currentTime);
+      vol.gain.exponentialRampToValueAtTime(0.25, suono.currentTime + 0.02);
+      vol.gain.exponentialRampToValueAtTime(0.0001, suono.currentTime + 0.5);
+      osc.connect(vol); vol.connect(suono.destination);
+      osc.start(); osc.stop(suono.currentTime + 0.5);
+    }catch(e){}
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  }
+
+  function batti(){
+    if (mancante() <= 0){
+      restante = 0;
+      inCorso = false;
+      clearInterval(battito); battito = null;
+      bottoneAvvia.textContent = "Avvia";
+      aggiorna();
+      segnale();
+      return;
+    }
+    aggiorna();
+  }
 
   function avvia(){
-    if (inCorso) return;
+    if (inCorso || restante <= 0) return;
+    // il contesto audio va creato mentre l'utente tocca, altrimenti iOS lo blocca
+    try{ suono = suono || new (window.AudioContext || window.webkitAudioContext)(); }catch(e){}
+    if (suono && suono.state === "suspended") suono.resume();
     inCorso = true;
     partenza = performance.now();
     bottoneAvvia.textContent = "Pausa";
-    battito = setInterval(aggiorna, 200);
+    battito = setInterval(batti, 200);
     aggiorna();
   }
 
   function ferma(){
     if (!inCorso) return;
-    trascorso = totale();
+    restante = mancante();
     inCorso = false;
     clearInterval(battito); battito = null;
     bottoneAvvia.textContent = "Riprendi";
@@ -1537,15 +2246,86 @@
 
   function azzera(){
     ferma();
-    trascorso = 0;
+    restante = durata;
     bottoneAvvia.textContent = "Avvia";
     aggiorna();
+    posizionaRuote();     // tornando alla scelta le ruote mostrano il valore corrente
   }
+
+  // ---- ruote di selezione, in stile sveglia ----
+  // La lista è ripetuta più volte: arrivati vicino ai bordi si salta senza animazione
+  // alla copia centrale, così scorrendo oltre 55 si riparte da 00 senza accorgersene.
+  const COPIE = 7;
+  const MINUTI = Array.from({length:11}, (_,i) => i);        // 0-10 minuti
+  const SECONDI = Array.from({length:12}, (_,i) => i * 5);   // 0-55, a passi di 5
+
+  function costruisciRuota(elemento, valori){
+    let voci = "";
+    for (let c = 0; c < COPIE; c++)
+      for (const v of valori) voci += `<div class="ruota-voce">${String(v).padStart(2,"0")}</div>`;
+    elemento.innerHTML = `<div class="ruota-lista">${voci}</div>`;
+  }
+  costruisciRuota(ruotaMinuti, MINUTI);
+  costruisciRuota(ruotaSecondi, SECONDI);
+
+  function indiceGrezzo(ruota){
+    return Math.round(ruota.scrollTop / ALTEZZA_VOCE);
+  }
+  function valoreDi(ruota, valori){
+    return valori[((indiceGrezzo(ruota) % valori.length) + valori.length) % valori.length];
+  }
+
+  function evidenzia(ruota){
+    const i = indiceGrezzo(ruota);
+    [...ruota.querySelectorAll(".ruota-voce")].forEach((v, k) =>
+      v.classList.toggle("scelta", k === i));
+  }
+
+  function ricentra(ruota, valori){
+    const copia = valori.length * ALTEZZA_VOCE;
+    const basso = copia * 2, alto = copia * (COPIE - 3);
+    // il salto è di copie intere: il numero sotto la banda non cambia, si sposta solo la lista
+    if (ruota.scrollTop < basso) ruota.scrollTop += copia * 3;
+    else if (ruota.scrollTop > alto) ruota.scrollTop -= copia * 3;
+  }
+
+  function leggiRuote(){
+    // a ruote nascoste lo scorrimento vale zero: leggerlo azzererebbe il recupero scelto
+    if (ruote.hidden || inCorso) return;
+    const totale = (valoreDi(ruotaMinuti, MINUTI) * 60 + valoreDi(ruotaSecondi, SECONDI)) * 1000;
+    durata = totale || 5000;        // mai zero: rimarrebbe un timer che non parte
+    restante = durata;
+    aggiorna();
+  }
+
+  function posizionaRuota(ruota, valori, valore){
+    void ruota.offsetHeight;      // forza il calcolo dell'ingombro: appena mostrata varrebbe zero
+    const centro = Math.floor(COPIE / 2) * valori.length;
+    const dentro = Math.max(0, valori.indexOf(valore));
+    ruota.scrollTop = (centro + dentro) * ALTEZZA_VOCE;
+    evidenzia(ruota);
+  }
+
+  function posizionaRuote(){
+    const totaleSecondi = Math.round(durata / 1000);
+    posizionaRuota(ruotaMinuti, MINUTI, Math.floor(totaleSecondi / 60));
+    posizionaRuota(ruotaSecondi, SECONDI, Math.round((totaleSecondi % 60) / 5) * 5 % 60);
+  }
+
+  [[ruotaMinuti, MINUTI], [ruotaSecondi, SECONDI]].forEach(([ruota, valori]) => {
+    let attesa = null;
+    ruota.addEventListener("scroll", () => {
+      evidenzia(ruota);
+      clearTimeout(attesa);
+      attesa = setTimeout(() => { ricentra(ruota, valori); leggiRuote(); }, 130);
+    });
+  });
 
   bolla.addEventListener("click", () => {
     riquadro.hidden = false;
     bolla.hidden = true;
     aggiorna();
+    if (!ruote.hidden) posizionaRuote();   // le ruote si posizionano solo da visibili
   });
 
   document.getElementById("cronoChiudi").addEventListener("click", () => {
@@ -1559,8 +2339,9 @@
 
   // rientrando nell'app dopo averla lasciata in secondo piano il tempo è comunque giusto,
   // perché si calcola dagli istanti e non dai battiti persi
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) aggiorna(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) batti(); });
 
+  durata = 90000; restante = durata;
   aggiorna();
 })();
 </script>
