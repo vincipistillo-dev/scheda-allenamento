@@ -1,6 +1,5 @@
-const CACHE = "scheda-allenamento-v2";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png",
-                "./immagini-esercizi.json"];
+const CACHE = "scheda-allenamento-v3";
+const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -38,7 +37,8 @@ self.addEventListener("fetch", (e) => {
       if (hit) return hit;
       return fetch(e.request)
         .then((resp) => {
-          if (resp.ok && sameOrigin){
+          const daTenere = sameOrigin || /cdn\.jsdelivr\.net/.test(e.request.url);
+          if (resp.ok && daTenere){
             const copy = resp.clone();
             caches.open(CACHE).then((c) => c.put(e.request, copy));
           }
