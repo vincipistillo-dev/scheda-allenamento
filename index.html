@@ -108,6 +108,7 @@
   body.in-scheda .shell{ padding-bottom:88px; }
 
   header.top{ padding-bottom:0; margin-bottom:14px; }
+  body.in-scheda header.top{ padding-bottom:12px; border-bottom:2px solid var(--ink); }
   /* testata: data e nome dell'app centrati, comandi appoggiati a destra sulla stessa fascia */
   .intestazione-app{
     position:relative; text-align:center;
@@ -153,7 +154,7 @@
     background:var(--accent-soft); color:var(--accent);
   }
   .scheda-icona .ico{ width:20px; height:20px; opacity:1; }
-  .scheda-nome{ font-family:var(--font-display); font-weight:800; font-size:21px; line-height:1.15; flex:1 1 auto; min-width:0; }
+  .scheda-nome{ font-family:var(--font-display); font-weight:800; font-size:25px; line-height:1.15; flex:1 1 auto; min-width:0; }
   .scheda-dati{ font-size:12.5px; color:var(--ink-muted); }
   .scheda-azioni{ display:flex; gap:4px; flex:none; }
   /* dati in riquadrini appena accennati, con icona */
@@ -174,6 +175,14 @@
   }
   .pillola .ico{ width:13px; height:13px; }
   .azioni-top{ display:flex; gap:4px; flex:none; }
+  .retro{
+    position:fixed; inset:0; z-index:1; overflow:hidden;
+    background:var(--ground); pointer-events:none;
+  }
+  .shell{ position:relative; z-index:2; }
+  /* mentre scorre, la pagina copre lo strato dietro e proietta un'ombra, come su iPhone */
+  .shell.trascinando{ background:var(--ground); box-shadow:-12px 0 28px rgba(0,0,0,.45); }
+  .nome-scheda-grande{}
   /* simbolo del peso: segna a destra il contesto "allenamento" */
   .simbolo-peso{ margin-left:auto; display:inline-flex; color:var(--ink-faint); }
   .simbolo-peso .ico{ width:19px; height:19px; }
@@ -675,6 +684,20 @@
   <div id="addDayZone"></div>
 
   <main id="dayPanel"></main>
+</div>
+
+<!-- durante il gesto indietro qui sotto si vede già la home -->
+<div class="retro" id="retro" hidden>
+  <div class="shell">
+    <header class="top">
+      <div class="intestazione-app">
+        <span class="oggi" id="retroOggi"></span>
+        <span class="nome-app">my workout planner</span>
+      </div>
+      <div class="riga-titolo"><div class="brand"><h1 id="retroTitolo"></h1><p>Cosa alleniamo oggi?</p></div></div>
+    </header>
+    <div id="retroHome"></div>
+  </div>
 </div>
 
 <!-- impostazioni: coprono tutto, con il contenuto dietro sfocato -->
@@ -2106,61 +2129,60 @@
     }).catch(() => {});
   }
 
-  // Gesto per tornare all'elenco: la pagina segue il dito dal bordo sinistro
-  // e scivola via, come la navigazione di sistema.
+  // Gesto per tornare all'elenco: la pagina segue il dito e, sotto, si vede
+  // già la home — come la navigazione di sistema.
   (function gestoIndietro(){
     const shell = document.querySelector(".shell");
+    const retro = document.getElementById("retro");
     let x0 = null, y0 = null, trascina = false;
 
-    function fine(annulla){
-      shell.style.transition = "transform .22s cubic-bezier(.22,.9,.3,1), opacity .22s ease";
-      if (annulla){
+    function preparaRetro(){
+      document.getElementById("retroOggi").textContent = document.getElementById("oggi").textContent;
+      const ora = new Date().getHours();
+      document.getElementById("retroTitolo").textContent =
+        ora < 13 ? "Buongiorno," : (ora < 18 ? "Buon pomeriggio," : "Buonasera,");
+      renderHome(document.getElementById("retroHome"));
+      retro.hidden = false;
+    }
+
+    function chiudiGesto(annulla){
+      shell.style.transition = "transform .22s cubic-bezier(.22,.9,.3,1)";
+      shell.style.transform = annulla ? "" : "translateX(100%)";
+      setTimeout(() => {
+        shell.style.transition = "";
         shell.style.transform = "";
-        shell.style.opacity = "";
-      } else {
-        shell.style.transform = "translateX(100%)";
-        shell.style.opacity = "0";
-        setTimeout(() => {
+        shell.classList.remove("trascinando");
+        retro.hidden = true;
+        if (!annulla){
           salvaModificheAperte();
           ui.schedaAperta = null; ui.openEx.clear();
           render();
-          shell.style.transition = "none";
-          shell.style.transform = "translateX(-18%)";
-          shell.style.opacity = "0";
-          requestAnimationFrame(() => {
-            shell.style.transition = "transform .2s ease-out, opacity .2s ease-out";
-            shell.style.transform = "";
-            shell.style.opacity = "";
-          });
-        }, 200);
-      }
-      setTimeout(() => { shell.style.transition = ""; }, 460);
+        }
+      }, annulla ? 220 : 210);
       trascina = false; x0 = null;
     }
 
     document.addEventListener("touchstart", (e) => {
-      if (!ui.schedaAperta || e.touches.length !== 1) { x0 = null; return; }
+      if (!ui.schedaAperta || e.touches.length !== 1) { x0 = null; trascina = false; return; }
       x0 = e.touches[0].clientX;
       y0 = e.touches[0].clientY;
       trascina = x0 < 40;                    // parte solo dal bordo sinistro
+      if (trascina){ preparaRetro(); shell.classList.add("trascinando"); }
     }, { passive:true });
 
     document.addEventListener("touchmove", (e) => {
       if (!trascina || x0 === null) return;
       const dx = e.touches[0].clientX - x0;
       const dy = Math.abs(e.touches[0].clientY - y0);
-      if (dy > 60){ fine(true); return; }    // è uno scorrimento verticale
-      if (dx > 0){
-        shell.style.transition = "none";
-        shell.style.transform = "translateX(" + dx + "px)";
-        shell.style.opacity = String(Math.max(0.35, 1 - dx / innerWidth));
-      }
+      if (dy > 60){ chiudiGesto(true); return; }     // è uno scorrimento verticale
+      shell.style.transition = "none";
+      shell.style.transform = "translateX(" + Math.max(0, dx) + "px)";
     }, { passive:true });
 
     document.addEventListener("touchend", (e) => {
       if (!trascina || x0 === null) return;
       const dx = e.changedTouches[0].clientX - x0;
-      fine(dx < innerWidth * 0.3);           // oltre un terzo dello schermo si chiude
+      chiudiGesto(dx < innerWidth * 0.3);            // oltre un terzo dello schermo si chiude
     }, { passive:true });
   })();
 
