@@ -106,10 +106,10 @@
   /* spazio in fondo perché il cronometro non copra l'ultimo pulsante */
   .shell{ max-width:820px; margin:0 auto; padding:4px 20px 32px; }
   /* il timer sta a destra e il pulsante a sinistra: basta poco margine */
-  body.in-scheda .shell{ padding-bottom:26px; }
+  body.in-scheda .shell{ padding-bottom:60px; }
 
   header.top{ padding-bottom:0; margin-bottom:14px; }
-  body.in-scheda header.top{ padding-bottom:12px; border-bottom:2px solid var(--ink); }
+  body.in-scheda > .shell > header.top{ padding-bottom:12px; border-bottom:2px solid var(--ink); }
   /* testata: data e nome dell'app centrati, comandi appoggiati a destra sulla stessa fascia */
   .intestazione-app{
     position:relative; text-align:center;
@@ -123,7 +123,13 @@
   .intestazione-app .azioni-top{
     position:absolute; right:0; top:50%; transform:translateY(-50%);
   }
+  /* dentro la scheda la freccia per tornare indietro sta a sinistra, dove la cerca il pollice */
+  .intestazione-app .azioni-sinistra{
+    position:absolute; left:0; top:50%; transform:translateY(-50%);
+  }
   .riga-titolo{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
+  body.in-scheda > .shell .riga-titolo{ align-items:center; }
+  .azioni-titolo{ display:flex; gap:4px; flex:none; }
   .brand h1{
     font-family:var(--font-display); font-weight:800; font-size:40px;
     letter-spacing:.2px; margin:0; line-height:.9; text-wrap:balance;
@@ -182,7 +188,7 @@
   }
   .shell{ position:relative; z-index:2; }
   /* mentre scorre, la pagina copre lo strato dietro e proietta un'ombra, come su iPhone */
-  .shell.trascinando{ background:var(--ground); box-shadow:-12px 0 28px rgba(0,0,0,.45); }
+  .shell.trascinando{ background:var(--ground); box-shadow:-12px 0 28px rgba(0,0,0,.45); min-height:100vh; will-change:transform; }
   .nome-scheda-grande{}
   /* simbolo del peso: segna a destra il contesto "allenamento" */
   .simbolo-peso{ margin-left:auto; display:inline-flex; color:var(--ink-faint); }
@@ -318,19 +324,20 @@
     outline:2px solid var(--accent); outline-offset:2px;
   }
 
-  /* card del giorno: un fuoco visivo in cima, con un alone caldo verso l'accento */
+  /* card del giorno: stesse misure della carta della scheda in home */
   .day-card{
+    display:flex; flex-direction:column; gap:3px;
     background:
-      radial-gradient(120% 140% at 0% 0%, var(--accent-soft) 0%, transparent 58%),
+      radial-gradient(120% 140% at 0% 0%, var(--accent-soft) 0%, transparent 60%),
       var(--surface);
-    border:1px solid var(--line); border-radius:22px; padding:18px 18px 16px;
+    border:1px solid var(--line); border-radius:18px; padding:12px 14px;
     margin-bottom:18px; box-shadow:var(--shadow);
   }
   .eyebrow{
     display:block; font-family:var(--font-mono); font-size:10px; font-weight:600;
     letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
   }
-  .day-title{ font-family:var(--font-display); font-weight:800; font-size:26px; line-height:1; }
+  .day-title{ font-family:var(--font-display); font-weight:800; font-size:25px; line-height:1.15; }
   .day-stats{
     display:flex; gap:20px; flex-wrap:wrap; align-items:baseline;
     margin-top:14px; font-size:12px; color:var(--ink-muted);
@@ -340,7 +347,9 @@
   .stat-n{ font-family:var(--font-mono); font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
 
   .day-header-row{ display:flex; align-items:center; justify-content:flex-start; margin-bottom:0; gap:8px; flex-wrap:wrap; }
-  .day-azioni{ display:flex; gap:4px; flex:none; }
+  .day-azioni{ display:flex; gap:4px; flex:none; margin-left:auto; }
+  /* il nome prende lo spazio libero, così matita e cestino restano a destra come in home */
+  .day-name-edit{ flex:1 1 0; min-width:0; }
   .btn-icona{
     display:inline-flex; align-items:center; justify-content:center;
     width:30px; height:30px; padding:0; border-radius:9px; cursor:pointer;
@@ -396,8 +405,8 @@
   .ex-body{ border-top:1px solid var(--line); padding:16px; display:none; }
   .ex-card.open .ex-body{ display:block; }
 
-  .ex-edit-btn{ flex:none; border:1px solid var(--line-strong); color:var(--ink-muted); }
-  .ex-edit-btn:hover{ color:var(--accent); border-color:var(--accent); }
+  .ex-edit-btn{ flex:none; color:var(--ink-faint); }
+  .ex-edit-btn:hover{ color:var(--accent); }
 
   .edit-form{
     display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:16px;
@@ -452,6 +461,15 @@
   /* nel superset le serie affiancano le note, perché valgono per tutti i movimenti */
   .riga-serie-note{ grid-column:1/-1; display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:end; }
   .slot-serie:empty{ display:none; }
+  /* senza serie accanto (esercizio singolo) le note prendono tutta la riga */
+  .slot-serie:empty + .field{ grid-column:1/-1; }
+  /* esercizio singolo: niente numero e niente riquadro, i campi stanno direttamente nel modulo */
+  :is(.edit-form, .add-ex-form):not(:has(.movimenti-extra > .blocco-movimento)) > .blocco-movimento{
+    background:none; border:none; border-radius:0; padding:0;
+  }
+  :is(.edit-form, .add-ex-form):not(:has(.movimenti-extra > .blocco-movimento)) > .blocco-movimento .ss-num{
+    display:none;
+  }
   .slot-serie .campo-serie{ width:76px; }
   .btn-piu{
     flex:none; width:32px; height:32px; border-radius:10px; cursor:pointer;
@@ -557,7 +575,13 @@
     width:228px; padding:18px;
     background:var(--surface); border:1px solid var(--line-strong); border-radius:30px;
     box-shadow:0 10px 32px rgba(0,0,0,.45);
+    touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none;   /* si trascina da un punto qualsiasi */
   }
+  .crono-riquadro button{ cursor:pointer; }
+  /* si apre dalla bolla: l'origine dell'ingrandimento la imposta lo script */
+  .crono-riquadro.si-apre{ animation:crono-apre .22s cubic-bezier(.22,.9,.3,1); }
+  @keyframes crono-apre{ from{ transform:scale(.25); opacity:0 } to{ transform:none; opacity:1 } }
+  @media (prefers-reduced-motion: reduce){ .crono-riquadro.si-apre{ animation:none; } }
   .crono-quadrante{
     position:relative; width:132px; height:132px; margin:4px auto 12px;
     display:flex; align-items:center; justify-content:center;
@@ -573,7 +597,7 @@
     height:102px; margin:6px 0 14px;
   }
   .ruota{
-    height:102px; width:64px; overflow-y:auto; scroll-snap-type:y mandatory;
+    height:102px; width:64px; overflow-y:auto; scroll-snap-type:y mandatory; touch-action:pan-y;
     scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch;
     /* le voci lontane dal centro sfumano, come sul quadrante di un orologio */
     mask-image:linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent);
@@ -664,6 +688,7 @@
 <div class="shell">
   <header class="top">
     <div class="intestazione-app">
+      <div class="azioni-sinistra" id="azioniSinistra"></div>
       <span class="oggi" id="oggi"></span>
       <span class="nome-app">my workout planner</span>
       <div class="azioni-top" id="azioniTop"></div>
@@ -694,8 +719,10 @@
       <div class="intestazione-app">
         <span class="oggi" id="retroOggi"></span>
         <span class="nome-app">my workout planner</span>
+        <div class="azioni-top" id="retroAzioni"></div>
       </div>
       <div class="riga-titolo"><div class="brand"><h1 id="retroTitolo"></h1><p>Cosa alleniamo oggi?</p></div></div>
+      <div id="retroSettimana"></div>
     </header>
     <div id="retroHome"></div>
   </div>
@@ -1343,6 +1370,8 @@
   }
 
   // ---- rendering ----
+  const BOTTONE_IMPOSTAZIONI = `<button class="btn-icona" data-action="toggle-impostazioni" title="Impostazioni" aria-label="Impostazioni">${ICONE.rotella}</button>`;
+
   function render(){
     if (!state) return;
 
@@ -1364,11 +1393,14 @@
     const sotto = document.getElementById("sottotitolo");
     sotto.hidden = !!sc;                       // dentro la scheda il sottotitolo non serve
     sotto.textContent = "Cosa alleniamo oggi?";
-    document.getElementById("azioniTitolo").innerHTML = "";
-    document.getElementById("azioniTop").innerHTML = sc
-      ? `<button class="btn-icona" data-action="torna-schede" title="Le mie schede" aria-label="Torna alle schede">${ICONE.indietro}</button>
-         <button class="btn-icona" data-action="esporta-scheda" title="Esporta la scheda" aria-label="Esporta la scheda">${ICONE.esporta}</button>`
-      : `<button class="btn-icona" data-action="toggle-impostazioni" title="Impostazioni" aria-label="Impostazioni">${ICONE.rotella}</button>`;
+    // dentro la scheda: indietro in alto a sinistra, esporta accanto al nome della scheda
+    document.getElementById("azioniSinistra").innerHTML = sc
+      ? `<button class="btn-icona" data-action="torna-schede" title="Le mie schede" aria-label="Torna alle schede">${ICONE.indietro}</button>`
+      : "";
+    document.getElementById("azioniTitolo").innerHTML = sc
+      ? `<button class="btn-icona" data-action="esporta-scheda" title="Esporta la scheda" aria-label="Esporta la scheda">${ICONE.esporta}</button>`
+      : "";
+    document.getElementById("azioniTop").innerHTML = sc ? "" : BOTTONE_IMPOSTAZIONI;
 
     // senza scheda aperta si vede l'elenco, altrimenti il contenuto della scheda
     document.body.classList.toggle("in-scheda", !!sc);
@@ -1782,7 +1814,9 @@
             }</div>
           </div>
           <div class="ex-last">${lastBlock}</div>
-          ${open ? `<button class="btn ghost small ex-edit-btn" data-action="toggle-edit-ex" data-ex="${ex.id}">${editing ? "Annulla" : "Modifica"}</button>` : ""}
+          ${open ? `<button class="btn-icona ex-edit-btn" data-action="toggle-edit-ex" data-ex="${ex.id}"
+                     title="${editing ? "Annulla modifica" : "Modifica esercizio"}"
+                     aria-label="${editing ? "Annulla modifica" : "Modifica esercizio"}">${editing ? ICONE.chiudi : ICONE.matita}</button>` : ""}
         </div>
         <div class="ex-body">
           ${editHtml}
@@ -2135,56 +2169,90 @@
   (function gestoIndietro(){
     const shell = document.querySelector(".shell");
     const retro = document.getElementById("retro");
-    let x0 = null, y0 = null, trascina = false;
+    // il timer galleggia sopra la pagina: deve scorrere via insieme a lei
+    const mobili = () => [shell, document.getElementById("cronoBolla"), document.getElementById("cronoRiquadro")];
+    const DURATA = 240;
+    // "attesa": il dito è sul bordo ma non si sa ancora se il gesto è orizzontale
+    let x0 = null, y0 = null, stato = null, ultimoX = 0, ultimoT = 0, velocita = 0, inChiusura = false;
 
     function preparaRetro(){
       document.getElementById("retroOggi").textContent = document.getElementById("oggi").textContent;
       const ora = new Date().getHours();
       document.getElementById("retroTitolo").textContent =
         ora < 13 ? "Buongiorno," : (ora < 18 ? "Buon pomeriggio," : "Buonasera,");
+      // la home dietro è identica a quella che comparirà: stessa testata, settimana e schede
+      document.getElementById("retroAzioni").innerHTML = BOTTONE_IMPOSTAZIONI;
+      renderSettimana(document.getElementById("retroSettimana"), true);
       renderHome(document.getElementById("retroHome"));
       retro.hidden = false;
     }
 
+    function sposta(px, transizione){
+      for (const el of mobili()){
+        el.style.transition = transizione;
+        el.style.transform = px ? "translate3d(" + px + "px,0,0)" : "";
+      }
+    }
+
     function chiudiGesto(annulla){
-      shell.style.transition = "transform .22s cubic-bezier(.22,.9,.3,1)";
-      shell.style.transform = annulla ? "" : "translateX(100%)";
+      inChiusura = true;
+      stato = null; x0 = null;
+      sposta(annulla ? 0 : shell.offsetWidth, "transform " + DURATA + "ms cubic-bezier(.22,.9,.3,1)");
       setTimeout(() => {
-        shell.style.transition = "";
-        shell.style.transform = "";
-        shell.classList.remove("trascinando");
-        retro.hidden = true;
         if (!annulla){
           salvaModificheAperte();
           ui.schedaAperta = null; ui.openEx.clear();
           render();
+          window.scrollTo(0, 0);     // la home dietro era mostrata dall'alto
         }
-      }, annulla ? 220 : 210);
-      trascina = false; x0 = null;
+        // tutto nello stesso fotogramma: la pagina nuova prende il posto di quella dietro
+        sposta(0, "none");
+        shell.classList.remove("trascinando");
+        retro.hidden = true;
+        inChiusura = false;
+      }, DURATA);
     }
 
     document.addEventListener("touchstart", (e) => {
-      if (!ui.schedaAperta || e.touches.length !== 1) { x0 = null; trascina = false; return; }
-      x0 = e.touches[0].clientX;
-      y0 = e.touches[0].clientY;
-      trascina = x0 < 40;                    // parte solo dal bordo sinistro
-      if (trascina){ preparaRetro(); shell.classList.add("trascinando"); }
+      stato = null; x0 = null;
+      if (inChiusura || !ui.schedaAperta || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      if (t.clientX > 40) return;                     // parte solo dal bordo sinistro
+      if (e.target.closest && e.target.closest(".crono-bolla, .crono-riquadro")) return;
+      x0 = t.clientX; y0 = t.clientY; stato = "attesa";
+      ultimoX = x0; ultimoT = e.timeStamp; velocita = 0;
     }, { passive:true });
 
     document.addEventListener("touchmove", (e) => {
-      if (!trascina || x0 === null) return;
-      const dx = e.touches[0].clientX - x0;
-      const dy = Math.abs(e.touches[0].clientY - y0);
-      if (dy > 60){ chiudiGesto(true); return; }     // è uno scorrimento verticale
-      shell.style.transition = "none";
-      shell.style.transform = "translateX(" + Math.max(0, dx) + "px)";
-    }, { passive:true });
+      if (!stato) return;
+      const t = e.touches[0];
+      const dx = t.clientX - x0, dy = t.clientY - y0;
+      if (stato === "attesa"){
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;          // ancora un tocco
+        if (dx <= 0 || Math.abs(dy) > Math.abs(dx)){ stato = null; return; }   // si sta scorrendo
+        // da qui in poi il gesto è nostro: la home dietro si prepara solo adesso,
+        // così un semplice tocco sul bordo (es. sulla freccia) non fa lampeggiare nulla
+        stato = "trascina";
+        preparaRetro();
+        shell.classList.add("trascinando");
+      }
+      if (e.cancelable) e.preventDefault();          // niente scorrimento verticale durante il gesto
+      const dt = e.timeStamp - ultimoT;
+      if (dt > 0) velocita = (t.clientX - ultimoX) / dt;
+      ultimoX = t.clientX; ultimoT = e.timeStamp;
+      sposta(Math.max(0, dx), "none");
+    }, { passive:false });
 
-    document.addEventListener("touchend", (e) => {
-      if (!trascina || x0 === null) return;
+    function fine(e){
+      if (stato !== "trascina"){ stato = null; x0 = null; return; }
       const dx = e.changedTouches[0].clientX - x0;
-      chiudiGesto(dx < innerWidth * 0.3);            // oltre un terzo dello schermo si chiude
-    }, { passive:true });
+      // se il dito si è fermato prima di staccarsi, lo scatto non conta
+      if (e.timeStamp - ultimoT > 100) velocita = 0;
+      // chiude oltre un terzo dello schermo, o con uno scatto veloce verso destra
+      chiudiGesto(!(dx > innerWidth * 0.3 || velocita > 0.5));
+    }
+    document.addEventListener("touchend", fine, { passive:true });
+    document.addEventListener("touchcancel", () => { if (stato === "trascina") chiudiGesto(true); else stato = null; }, { passive:true });
   })();
 
   // Safari ignora user-scalable=no: gli eventi gesture sono l'unico modo di fermare il pizzico
@@ -2404,49 +2472,148 @@
     });
   });
 
-  function apriRiquadro(){
-    riquadro.hidden = false;
-    bolla.hidden = true;
-    aggiorna();
-    if (!ruote.hidden) posizionaRuote();   // le ruote si posizionano solo da visibili
+  // ---- posizione sullo schermo ----
+  // Bolla e riquadro si spostano liberamente; lasciati vicino a uno dei quattro angoli
+  // vengono attratti, come da una calamita, alla stessa distanza dai bordi della partenza.
+  const MARGINE = 16;        // distanza dai bordi negli angoli, come la posizione iniziale
+  const BORDO_MIN = 6;       // quanto si può avvicinare al bordo trascinando
+  const RAGGIO_CALAMITA = 48;  // distanza da un bordo entro cui scatta l'attrazione
+  const larghezza = () => document.documentElement.clientWidth;
+  const altezza = () => document.documentElement.clientHeight;
+
+  // le zone sicure dell'iPhone sono già il padding del body
+  function zoneSicure(){
+    const s = getComputedStyle(document.body);
+    return { alto: parseFloat(s.paddingTop) || 0, basso: parseFloat(s.paddingBottom) || 0,
+             sinistra: parseFloat(s.paddingLeft) || 0, destra: parseFloat(s.paddingRight) || 0 };
   }
 
-  // Trascinamento: si può spostare dove serve, ma la posizione di partenza
-  // resta quella in basso a destra ogni volta che si riapre l'app.
-  (function trascina(){
-    let attivo = false, spostato = false, dx = 0, dy = 0;
+  function limita(el, x, y){
+    return {
+      x: Math.min(Math.max(x, BORDO_MIN), larghezza() - el.offsetWidth - BORDO_MIN),
+      y: Math.min(Math.max(y, BORDO_MIN), altezza() - el.offsetHeight - BORDO_MIN)
+    };
+  }
 
-    bolla.addEventListener("pointerdown", (e) => {
+  // Si ancora al lato più vicino (right/bottom se sta a destra/in basso): così,
+  // se il riquadro cambia altezza passando dalle ruote al quadrante, resta attaccato all'angolo.
+  function metti(el, x, y){
+    const p = limita(el, x, y);
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const aDestra = p.x + w / 2 > larghezza() / 2;
+    const inBasso = p.y + h / 2 > altezza() / 2;
+    el.style.left   = aDestra ? "auto" : p.x + "px";
+    el.style.right  = aDestra ? (larghezza() - p.x - w) + "px" : "auto";
+    el.style.top    = inBasso ? "auto" : p.y + "px";
+    el.style.bottom = inBasso ? (altezza() - p.y - h) + "px" : "auto";
+  }
+
+  // Ogni bordo attira per conto suo: vicino a un lato si allinea a quel lato,
+  // vicino a due (un angolo) si allinea a entrambi.
+  function calamita(el){
+    const r = el.getBoundingClientRect();
+    const z = zoneSicure();
+    const attira = (pos, bordi) => {
+      for (const b of bordi) if (Math.abs(pos - b) <= RAGGIO_CALAMITA) return b;
+      return pos;
+    };
+    const x = attira(r.left, [MARGINE + z.sinistra, larghezza() - r.width - MARGINE - z.destra]);
+    const y = attira(r.top, [MARGINE + z.alto, altezza() - r.height - MARGINE - z.basso]);
+    metti(el, r.left, r.top);          // fissa gli ancoraggi prima di animare
+    if (x === r.left && y === r.top) return;
+    void el.offsetWidth;
+    const curva = " .28s cubic-bezier(.3,1.35,.5,1)";
+    el.style.transition = ["left","right","top","bottom"].map(p => p + curva).join(", ");
+    metti(el, x, y);
+    setTimeout(() => { el.style.transition = ""; }, 300);
+  }
+
+  // Trascinamento condiviso da bolla e riquadro. "tocco" parte se non c'è stato spostamento.
+  function rendiTrascinabile(el, { salta, tocco }){
+    let attivo = false, spostato = false, dx = 0, dy = 0, x0 = 0, y0 = 0;
+
+    el.addEventListener("pointerdown", (e) => {
+      if (e.button > 0 || (salta && e.target.closest(salta))) return;
       attivo = true; spostato = false;
-      const r = bolla.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
       dx = e.clientX - r.left; dy = e.clientY - r.top;
-      bolla.setPointerCapture(e.pointerId);
+      x0 = e.clientX; y0 = e.clientY;
+      el.style.transition = "none";
+      el.setPointerCapture(e.pointerId);
     });
 
-    bolla.addEventListener("pointermove", (e) => {
+    el.addEventListener("pointermove", (e) => {
       if (!attivo) return;
-      if (Math.abs(e.movementX) + Math.abs(e.movementY) > 0) spostato = true;
-      const x = Math.min(Math.max(e.clientX - dx, 6), innerWidth - bolla.offsetWidth - 6);
-      const y = Math.min(Math.max(e.clientY - dy, 6), innerHeight - bolla.offsetHeight - 6);
-      bolla.style.left = x + "px";
-      bolla.style.top = y + "px";
-      bolla.style.right = "auto";
-      bolla.style.bottom = "auto";
+      // qualche pixel di tolleranza: un dito non sta mai perfettamente fermo
+      if (!spostato && Math.hypot(e.clientX - x0, e.clientY - y0) < 6) return;
+      spostato = true;
+      const p = limita(el, e.clientX - dx, e.clientY - dy);
+      el.style.left = p.x + "px"; el.style.top = p.y + "px";
+      el.style.right = "auto"; el.style.bottom = "auto";
     });
 
-    bolla.addEventListener("pointerup", (e) => {
+    function rilascia(e){
       if (!attivo) return;
       attivo = false;
-      bolla.releasePointerCapture(e.pointerId);
-      if (!spostato) apriRiquadro();       // un tocco fermo resta un clic
-    });
-  })();
+      if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+      el.style.transition = "";
+      if (spostato) calamita(el);
+      else if (tocco && e.type === "pointerup") tocco();
+    }
+    el.addEventListener("pointerup", rilascia);
+    el.addEventListener("pointercancel", rilascia);
+  }
 
-  document.getElementById("cronoChiudi").addEventListener("click", () => {
+  // Il riquadro si apre dall'angolo in cui si trova la bolla e cresce verso l'interno dello schermo.
+  function apriRiquadro(){
+    const b = bolla.getBoundingClientRect();
+    riquadro.hidden = false;
+    aggiorna();
+    if (!ruote.hidden) posizionaRuote();   // le ruote si posizionano solo da visibili
+    const w = riquadro.offsetWidth, h = riquadro.offsetHeight;
+    const aDestra = b.left + b.width / 2 > larghezza() / 2;
+    const inBasso = b.top + b.height / 2 > altezza() / 2;
+    const x = aDestra ? b.right - w : b.left;
+    const y = inBasso ? b.bottom - h : b.top;
+    riquadro.style.transition = "none";
+    metti(riquadro, x, y);
+    // l'ingrandimento parte dal punto dov'era la bolla
+    const r = riquadro.getBoundingClientRect();
+    // dove stava la bolla rispetto al riquadro: chiudendo ci torna esattamente
+    scartoBolla = { x: b.left - r.left, y: b.top - r.top };
+    riquadro.style.transformOrigin = (b.left + b.width / 2 - r.left) + "px " + (b.top + b.height / 2 - r.top) + "px";
+    riquadro.classList.remove("si-apre"); void riquadro.offsetWidth; riquadro.classList.add("si-apre");
+    bolla.hidden = true;
+  }
+
+  // Chiudendo, la bolla torna dove si trovava all'apertura. Se nel frattempo il riquadro
+  // è stato spostato, la bolla lo segue mantenendo la stessa posizione rispetto a lui.
+  let scartoBolla = { x: 0, y: 0 };
+  function chiudiRiquadro(){
+    const r = riquadro.getBoundingClientRect();
     riquadro.hidden = true;
     bolla.hidden = false;
     aggiorna();
+    bolla.style.transition = "none";
+    metti(bolla, r.left + scartoBolla.x, r.top + scartoBolla.y);
+  }
+
+  riquadro.addEventListener("animationend", () => riquadro.classList.remove("si-apre"));
+
+  rendiTrascinabile(bolla, { tocco: apriRiquadro });
+  // dal riquadro si trascina ovunque, tranne da pulsanti e ruote che hanno il loro gesto
+  rendiTrascinabile(riquadro, { salta: "button, .ruota" });
+
+  // se lo schermo cambia (rotazione), bolla e riquadro non devono restare fuori
+  window.addEventListener("resize", () => {
+    for (const el of [bolla, riquadro]){
+      if (el.hidden || !el.style.left && !el.style.right) continue;
+      const r = el.getBoundingClientRect();
+      metti(el, r.left, r.top);
+    }
   });
+
+  document.getElementById("cronoChiudi").addEventListener("click", chiudiRiquadro);
 
   bottoneAvvia.addEventListener("click", () => { inCorso ? ferma() : avvia(); });
   document.getElementById("cronoAzzera").addEventListener("click", azzera);
