@@ -115,7 +115,7 @@
      cambiando schermata sembra di cambiare solo il contenuto */
   .intestazione-app{
     position:sticky; top:0; z-index:20;
-    margin:calc(-1 * env(safe-area-inset-top)) calc(-1 * var(--gutter)) 10px;
+    margin:calc(-1 * env(safe-area-inset-top)) calc(-1 * var(--gutter)) 0;
     padding:env(safe-area-inset-top) var(--gutter) 0;
     background:var(--ground);
   }
@@ -197,11 +197,15 @@
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   #retroPagina{ will-change:transform; }
+  /* nello strato dietro il banner non deve essere "sticky": il margine per la tacca
+     dell'iPhone lo spingerebbe più in basso e comparirebbe doppio durante il gesto */
+  .retro .intestazione-app{ position:relative; }
   .retro-velo{ position:absolute; inset:0; z-index:3; background:#000; opacity:0; }
   .shell{ position:relative; z-index:2; }
   /* mentre scorre, la pagina copre lo strato dietro e proietta un'ombra, come su iPhone */
   /* la pagina sotto il banner arriva ai bordi dello schermo: scorrendo copre tutta la home dietro */
-  .pagina{ margin:0 calc(-1 * var(--gutter)); padding:0 var(--gutter); background:var(--ground); }
+  /* lo stacco sotto il banner è dentro la pagina: scorrendo non lascia fessure sulla home dietro */
+  .pagina{ margin:0 calc(-1 * var(--gutter)); padding:10px var(--gutter) 0; background:var(--ground); }
   .pagina.trascinando{ box-shadow:-12px 0 28px rgba(0,0,0,.45); min-height:100vh; }
   .nome-scheda-grande{}
   /* simbolo del peso: segna a destra il contesto "allenamento" */
@@ -430,7 +434,7 @@
   }
   .ex-thumb{
     display:inline-flex; align-items:center; justify-content:center; flex:none;
-    width:var(--alto-testo); height:var(--alto-testo); border-radius:16px; overflow:hidden;
+    width:calc(var(--alto-testo) - 8px); height:calc(var(--alto-testo) - 8px); border-radius:14px; overflow:hidden;
     background:var(--surface-2); border:1px solid var(--line);
   }
   /* il disegno prende il colore dell'accento e lascia trasparente lo sfondo */
@@ -2286,7 +2290,7 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
 
     // stato: null | "attesa" (dito sul bordo, direzione ignota) | "trascina"
     let stato = null, inChiusura = false;
-    let x0 = 0, y0 = 0, spostamento = 0, fotogramma = 0;
+    let x0 = 0, y0 = 0, spostamento = 0;
     let campioni = [];          // ultime posizioni, per misurare la velocità del rilascio
 
     function preparaRetro(){
@@ -2324,7 +2328,6 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
     }
 
     function chiudiGesto(annulla){
-      cancelAnimationFrame(fotogramma);
       inChiusura = true;
       stato = null;
       const larghezza = shell.offsetWidth || innerWidth;
@@ -2381,9 +2384,8 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
       spostamento = Math.max(0, t.clientX - x0);
       campioni.push({ x: t.clientX, t: e.timeStamp });
       if (campioni.length > 5) campioni.shift();
-      // un solo aggiornamento per fotogramma, anche se i tocchi arrivano più fitti
-      cancelAnimationFrame(fotogramma);
-      fotogramma = requestAnimationFrame(() => disegna(spostamento, null));
+      // subito: la pagina resta sotto il dito senza un fotogramma di ritardo
+      disegna(spostamento, null);
     }, { passive:false });
 
     function fine(e){
@@ -2630,11 +2632,11 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
   });
 
   // ---- posizione sullo schermo ----
-  // Bolla e riquadro si spostano liberamente; lasciati vicino a uno dei quattro angoli
-  // vengono attratti, come da una calamita, alla stessa distanza dai bordi della partenza.
-  const MARGINE = 16;        // distanza dai bordi negli angoli, come la posizione iniziale
-  const BORDO_MIN = 6;       // quanto si può avvicinare al bordo trascinando
-  const RAGGIO_CALAMITA = 90;  // distanza da un angolo entro cui scatta l'attrazione
+  // Bolla e riquadro restano esattamente dove li si lascia: nessuna calamita che li sposti
+  // dopo il rilascio. L'unico vincolo è il bordo: trascinando non si va oltre 16 px dai lati
+  // (la stessa distanza della posizione di partenza), così non finiscono mai appiccicati
+  // al bordo e, portati in un angolo, si fermano proprio nella posizione iniziale.
+  const MARGINE = 16;
   const larghezza = () => document.documentElement.clientWidth;
   const altezza = () => document.documentElement.clientHeight;
 
@@ -2646,9 +2648,10 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
   }
 
   function limita(el, x, y){
+    const z = zoneSicure();
     return {
-      x: Math.min(Math.max(x, BORDO_MIN), larghezza() - el.offsetWidth - BORDO_MIN),
-      y: Math.min(Math.max(y, BORDO_MIN), altezza() - el.offsetHeight - BORDO_MIN)
+      x: Math.min(Math.max(x, MARGINE + z.sinistra), larghezza() - el.offsetWidth - MARGINE - z.destra),
+      y: Math.min(Math.max(y, MARGINE + z.alto), altezza() - el.offsetHeight - MARGINE - z.basso)
     };
   }
 
@@ -2665,91 +2668,61 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
     el.style.bottom = inBasso ? (altezza() - p.y - h) + "px" : "auto";
   }
 
-  // Una sola regola, prevedibile: solo i quattro angoli attirano. Lasciato lontano
-  // dagli angoli resta esattamente dove lo si è messo.
-  function angoloVicino(el){
-    const r = el.getBoundingClientRect();
-    const z = zoneSicure();
-    const xs = [MARGINE + z.sinistra, larghezza() - r.width - MARGINE - z.destra];
-    const ys = [MARGINE + z.alto, altezza() - r.height - MARGINE - z.basso];
-    let meglio = null, distanza = Infinity;
-    for (const x of xs) for (const y of ys){
-      const d = Math.hypot(r.left - x, r.top - y);
-      if (d < distanza){ distanza = d; meglio = { x, y }; }
-    }
-    return distanza <= RAGGIO_CALAMITA ? meglio : null;
-  }
-
-  // L'aggancio si anima con transform, che il telefono muove senza ricalcolare la pagina:
-  // l'elemento va subito al posto finale e una traslazione lo fa partire da dov'era.
-  const animazioni = new WeakMap();
-  function calamita(el){
-    const r = el.getBoundingClientRect();
-    const meta = angoloVicino(el);
-    metti(el, r.left, r.top);                  // fissa gli ancoraggi sul lato più vicino
-    if (!meta) return;
-    metti(el, meta.x, meta.y);
-    const dopo = el.getBoundingClientRect();
-    const dx = r.left - dopo.left, dy = r.top - dopo.top;
-    if (!dx && !dy) return;
-    el.style.transition = "none";
-    el.style.transform = "translate3d(" + dx + "px," + dy + "px,0)";
-    void el.offsetWidth;
-    el.style.transition = "transform .34s cubic-bezier(.22,.9,.3,1)";
-    el.style.transform = "";
-    clearTimeout(animazioni.get(el));
-    animazioni.set(el, setTimeout(() => { el.style.transition = ""; }, 360));
-  }
-
   // Trascinamento condiviso da bolla e riquadro. "tocco" parte se non c'è stato spostamento.
+  // Durante il trascinamento l'elemento si muove con transform (fluido, senza ricalcolare
+  // la pagina); al rilascio la posizione diventa definitiva, nello stesso punto a schermo.
   function rendiTrascinabile(el, { salta, tocco }){
-    let attivo = false, spostato = false, dx = 0, dy = 0, x0 = 0, y0 = 0, px = 0, py = 0, fotogramma = 0;
+    let attivo = false, spostato = false;
+    let base = null;             // posizione dell'elemento quando il dito lo ha preso
+    let x0 = 0, y0 = 0;          // punto in cui il trascinamento è davvero partito
+    let px = 0, py = 0;
+
+    function posizioneDelDito(){
+      // l'elemento segue lo spostamento del dito, senza saltare verso di esso
+      return limita(el, base.x + (px - x0), base.y + (py - y0));
+    }
 
     el.addEventListener("pointerdown", (e) => {
       if (e.button > 0 || (salta && e.target.closest(salta))) return;
       attivo = true; spostato = false;
-      // se stava ancora scivolando verso un angolo, lo si ferma dov'è ora, senza scatti
       const r = el.getBoundingClientRect();
-      clearTimeout(animazioni.get(el));
+      base = { x: r.left, y: r.top };
+      x0 = px = e.clientX; y0 = py = e.clientY;
       el.style.transition = "none";
-      el.style.transform = "";
-      el.style.left = r.left + "px"; el.style.top = r.top + "px";
-      el.style.right = "auto"; el.style.bottom = "auto";
-      dx = e.clientX - r.left; dy = e.clientY - r.top;
-      x0 = e.clientX; y0 = e.clientY;
       el.setPointerCapture(e.pointerId);
     });
 
     el.addEventListener("pointermove", (e) => {
       if (!attivo) return;
-      // qualche pixel di tolleranza: un dito non sta mai perfettamente fermo
-      if (!spostato && Math.hypot(e.clientX - x0, e.clientY - y0) < 6) return;
-      spostato = true;
       px = e.clientX; py = e.clientY;
-      // una sola posizione per fotogramma: il movimento resta regolare
-      if (fotogramma) return;
-      fotogramma = requestAnimationFrame(() => {
-        fotogramma = 0;
-        if (!attivo) return;
-        const p = limita(el, px - dx, py - dy);
-        el.style.left = p.x + "px"; el.style.top = p.y + "px";
-      });
+      if (!spostato){
+        // qualche pixel di tolleranza: un dito non sta mai perfettamente fermo.
+        // Superata la soglia si riparte da qui, così l'elemento non fa lo scatto iniziale
+        if (Math.hypot(px - x0, py - y0) < 6) return;
+        spostato = true;
+        x0 = px; y0 = py;
+        el.style.willChange = "transform";
+      }
+      // subito, senza aspettare il fotogramma dopo: il browser manda già un solo
+      // movimento per fotogramma, e così l'elemento resta incollato al dito
+      const p = posizioneDelDito();
+      el.style.transform = "translate3d(" + (p.x - base.x) + "px," + (p.y - base.y) + "px,0)";
     });
 
     function rilascia(e){
       if (!attivo) return;
       attivo = false;
-      cancelAnimationFrame(fotogramma); fotogramma = 0;
       if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
       if (spostato){
-        const p = limita(el, px - dx, py - dy);      // ultima posizione del dito
-        el.style.left = p.x + "px"; el.style.top = p.y + "px";
-        el.style.transition = "";
-        calamita(el);
-      } else {
-        el.style.transition = "";
-        if (tocco && e.type === "pointerup") tocco();
+        // resta dove l'ha lasciato il dito: si passa dalla traslazione alla posizione vera
+        const p = posizioneDelDito();
+        el.style.transform = "";
+        metti(el, p.x, p.y);
+        el.style.willChange = "";
+      } else if (tocco && e.type === "pointerup"){
+        tocco();
       }
+      el.style.transition = "";
     }
     el.addEventListener("pointerup", rilascia);
     el.addEventListener("pointercancel", rilascia);
@@ -2799,7 +2772,10 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
   window.addEventListener("resize", () => {
     for (const el of [bolla, riquadro]){
       if (el.hidden || !el.style.left && !el.style.right) continue;
+      // in home il timer è nascosto e la sua posizione vale 0,0: spostarlo ora
+      // lo manderebbe nell'angolo in alto a sinistra
       const r = el.getBoundingClientRect();
+      if (!r.width) continue;
       metti(el, r.left, r.top);
     }
   });
