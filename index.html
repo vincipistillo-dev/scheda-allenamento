@@ -2637,8 +2637,15 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
   // (la stessa distanza della posizione di partenza), così non finiscono mai appiccicati
   // al bordo e, portati in un angolo, si fermano proprio nella posizione iniziale.
   const MARGINE = 16;
-  const larghezza = () => document.documentElement.clientWidth;
-  const altezza = () => document.documentElement.clientHeight;
+  // Lo spazio in cui si muovono bolla e riquadro si misura con un elemento fisso a tutto
+  // schermo. Non si usa documentElement.clientHeight: nell'app installata su iPhone esclude
+  // la barra di stato (circa 47 pt) e il timer, al primo tocco, saltava su e poi ricadeva giù.
+  const schermo = document.createElement("div");
+  schermo.setAttribute("aria-hidden", "true");
+  schermo.style.cssText = "position:fixed;inset:0;visibility:hidden;pointer-events:none;z-index:-1";
+  document.body.appendChild(schermo);
+  const larghezza = () => schermo.clientWidth;
+  const altezza = () => schermo.clientHeight;
 
   // le zone sicure dell'iPhone sono già il padding del body
   function zoneSicure(){
