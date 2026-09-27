@@ -104,16 +104,24 @@
   }
 
   /* spazio in fondo perché il cronometro non copra l'ultimo pulsante */
-  .shell{ max-width:820px; margin:0 auto; padding:4px 20px 32px; }
+  .shell{ --gutter:20px; max-width:820px; margin:0 auto; padding:0 var(--gutter) 32px; }
   /* il timer sta a destra e il pulsante a sinistra: basta poco margine */
   body.in-scheda .shell{ padding-bottom:60px; }
 
   header.top{ padding-bottom:0; margin-bottom:14px; }
-  body.in-scheda > .shell > header.top{ padding-bottom:12px; border-bottom:2px solid var(--ink); }
-  /* testata: data e nome dell'app centrati, comandi appoggiati a destra sulla stessa fascia */
+  body.in-scheda #pagina > header.top{ padding-bottom:12px; border-bottom:2px solid var(--ink); }
+  /* testata: data e nome dell'app centrati, comandi appoggiati ai lati sulla stessa fascia.
+     Resta fissa in alto, a tutta larghezza e sotto la barra di stato dell'iPhone, così
+     cambiando schermata sembra di cambiare solo il contenuto */
   .intestazione-app{
+    position:sticky; top:0; z-index:20;
+    margin:calc(-1 * env(safe-area-inset-top)) calc(-1 * var(--gutter)) 10px;
+    padding:env(safe-area-inset-top) var(--gutter) 0;
+    background:var(--ground);
+  }
+  .intestazione-dentro{
     position:relative; text-align:center;
-    padding:0 0 8px; margin-bottom:10px; border-bottom:1px solid var(--line);
+    padding:4px 0 8px; border-bottom:1px solid var(--line);
   }
   .nome-app{
     display:block; margin-top:3px;
@@ -128,7 +136,7 @@
     position:absolute; left:0; top:50%; transform:translateY(-50%);
   }
   .riga-titolo{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
-  body.in-scheda > .shell .riga-titolo{ align-items:center; }
+  body.in-scheda #pagina .riga-titolo{ align-items:center; }
   .azioni-titolo{ display:flex; gap:4px; flex:none; }
   .brand h1{
     font-family:var(--font-display); font-weight:800; font-size:40px;
@@ -188,11 +196,13 @@
     /* stessi margini di sicurezza del body: la home dietro sta esattamente dove comparirà */
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-  .retro > .shell{ will-change:transform; }
+  #retroPagina{ will-change:transform; }
   .retro-velo{ position:absolute; inset:0; z-index:3; background:#000; opacity:0; }
   .shell{ position:relative; z-index:2; }
   /* mentre scorre, la pagina copre lo strato dietro e proietta un'ombra, come su iPhone */
-  .shell.trascinando{ background:var(--ground); box-shadow:-12px 0 28px rgba(0,0,0,.45); min-height:100vh; will-change:transform; }
+  /* la pagina sotto il banner arriva ai bordi dello schermo: scorrendo copre tutta la home dietro */
+  .pagina{ margin:0 calc(-1 * var(--gutter)); padding:0 var(--gutter); background:var(--ground); }
+  .pagina.trascinando{ box-shadow:-12px 0 28px rgba(0,0,0,.45); min-height:100vh; }
   .nome-scheda-grande{}
   /* simbolo del peso: segna a destra il contesto "allenamento" */
   .simbolo-peso{ margin-left:auto; display:inline-flex; color:var(--ink-faint); }
@@ -386,16 +396,30 @@
     display:flex; align-items:center; gap:12px; padding:10px 14px; cursor:pointer;
   }
   .ex-head:hover{ background:var(--surface-2); }
-  /* nome e serie×ripetizioni impilati stretti, così la riga resta alta quanto la foto */
-  .ex-testo{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
-  .ex-name{ font-family:var(--font-display); font-weight:700; font-size:20px; line-height:1.15; }
-  /* la nota accompagna il nome sulla stessa riga, non sotto */
-  .ex-name .sub{
-    font-family:var(--font-body); font-weight:500; font-size:12.5px; color:var(--ink-muted);
-    margin-left:8px; white-space:nowrap;
+  /* due sezioni affiancate che non si sovrappongono: a sinistra nome e serie×ripetizioni,
+     a destra le note. Il nome occupa solo lo spazio che gli serve, fino a un massimo
+     oltre il quale va a capo: le note partono subito dopo, sulla sua prima riga, e se
+     vanno a capo restano nella loro colonna, mai sotto il nome.
+     Tutte le carte hanno la stessa altezza: il nome ha sempre due righe riservate
+     (anche se è corto) e la foto è alta quanto nome + serie×ripetizioni */
+  .ex-card{ --riga-nome:20px; --alto-testo:calc(var(--riga-nome) * 1.15 * 2 + 1px + 19.5px); }
+  .ex-testo{ flex:1 1 auto; min-width:0; display:flex; align-items:baseline; gap:10px; }
+  .ex-col-nome{ flex:0 1 auto; max-width:54%; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .ex-col-note{
+    flex:1 1 0; min-width:0;
+    font-size:12.5px; line-height:1.4; color:var(--ink-muted);
+    overflow-wrap:anywhere;
+    /* al massimo tre righe, così non allunga mai la carta */
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; line-clamp:3; overflow:hidden;
   }
-  .ex-target{ font-family:var(--font-mono); font-size:13px; color:var(--ink-muted); flex:none; }
-  .ex-last{ display:flex; flex-direction:column; align-items:flex-end; flex:none; min-width:84px; }
+  .ex-col-note:empty{ visibility:hidden; }
+  .ex-name{
+    font-family:var(--font-display); font-weight:700; font-size:var(--riga-nome); line-height:1.15;
+    overflow-wrap:anywhere; height:calc(var(--riga-nome) * 1.15 * 2);
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden;
+  }
+  .ex-target{ font-family:var(--font-mono); font-size:13px; line-height:19.5px; color:var(--ink-muted); flex:none; }
+  .ex-last{ display:flex; flex-direction:column; align-items:flex-end; flex:none; min-width:84px; line-height:1.25; }
   .ex-last .kg{ font-family:var(--font-mono); font-weight:600; font-size:17px; }
   .ex-last .delta{ font-family:var(--font-mono); font-size:11.5px; }
   .ex-last .delta.up{ color:var(--good); }
@@ -406,7 +430,7 @@
   }
   .ex-thumb{
     display:inline-flex; align-items:center; justify-content:center; flex:none;
-    width:46px; height:46px; border-radius:13px; overflow:hidden;
+    width:var(--alto-testo); height:var(--alto-testo); border-radius:16px; overflow:hidden;
     background:var(--surface-2); border:1px solid var(--line);
   }
   /* il disegno prende il colore dell'accento e lascia trasparente lo sfondo */
@@ -502,12 +526,6 @@
   .movimenti-extra:empty{ display:none; }
   .riga-movimento{ margin-top:10px; }
   .ss-piu{ color:var(--accent); font-weight:700; margin:0 7px; }
-  .ss-tag{
-    display:inline-block; vertical-align:middle; margin-left:8px;
-    font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--accent); background:var(--accent-soft);
-    border-radius:99px; padding:3px 8px;
-  }
   .azioni-sessione{ display:flex; gap:8px; align-items:center; }
   .azioni-sessione .btn{ white-space:nowrap; }
 
@@ -659,14 +677,15 @@
   .empty-state h2{ font-family:var(--font-display); font-size:26px; color:var(--ink); margin:0 0 8px; }
 
   @media (max-width:620px){
-    .shell{ padding:2px 14px 40px; }
+    .shell{ --gutter:14px; padding:0 var(--gutter) 40px; }
+    .intestazione-dentro{ padding-top:2px; }
     .brand h1{ font-size:30px; }
     /* la barra resta su una riga: le azioni vanno in alto a destra, non sotto */
     header.top{ align-items:flex-start; padding-bottom:16px; margin-bottom:18px; }
     .brand{ min-width:0; }
 
     .ex-head{ gap:10px; padding:10px 12px; }
-    .ex-name{ font-size:18px; }
+    .ex-card{ --riga-nome:17px; }
     .ex-last{ min-width:0; }
 
     .ex-body{ padding:14px; }
@@ -701,13 +720,17 @@
 </head>
 <body>
 <div class="shell">
-  <header class="top">
-    <div class="intestazione-app">
+  <!-- il banner resta fermo: durante il gesto indietro scorre solo la pagina sotto -->
+  <div class="intestazione-app">
+    <div class="intestazione-dentro">
       <div class="azioni-sinistra" id="azioniSinistra"></div>
       <span class="oggi" id="oggi"></span>
       <span class="nome-app">my workout planner</span>
       <div class="azioni-top" id="azioniTop"></div>
     </div>
+  </div>
+  <div class="pagina" id="pagina">
+  <header class="top">
     <div class="riga-titolo">
       <div class="brand">
         <h1 id="titolo"></h1>
@@ -725,21 +748,26 @@
   <div id="addDayZone"></div>
 
   <main id="dayPanel"></main>
+  </div>
 </div>
 
 <!-- durante il gesto indietro qui sotto si vede già la home -->
 <div class="retro" id="retro" hidden>
   <div class="shell">
-    <header class="top">
-      <div class="intestazione-app">
+    <div class="intestazione-app">
+      <div class="intestazione-dentro">
         <span class="oggi" id="retroOggi"></span>
         <span class="nome-app">my workout planner</span>
         <div class="azioni-top" id="retroAzioni"></div>
       </div>
-      <div class="riga-titolo"><div class="brand"><h1 id="retroTitolo"></h1><p>Cosa alleniamo oggi?</p></div></div>
-      <div id="retroSettimana"></div>
-    </header>
-    <div id="retroHome"></div>
+    </div>
+    <div class="pagina" id="retroPagina">
+      <header class="top">
+        <div class="riga-titolo"><div class="brand"><h1 id="retroTitolo"></h1><p>Cosa alleniamo oggi?</p></div></div>
+        <div id="retroSettimana"></div>
+      </header>
+      <div id="retroHome"></div>
+    </div>
   </div>
   <div class="retro-velo" id="retroVelo"></div>
 </div>
@@ -808,6 +836,8 @@
   const STORAGE_KEY = "schedaDiFerro:v1";
   const CHIAVE_TEMA = "schedaDiFerro:tema";
   const CHIAVE_NOME = "schedaDiFerro:nome";
+  // le note stanno nella colonna a destra del nome: 50 caratteri sono circa tre righe su un telefono
+  const MAX_NOTE = 50;
 
   function leggiPreferenza(chiave){
     try{ return localStorage.getItem(chiave); }catch(e){ return null; }
@@ -1721,7 +1751,7 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
             <div class="movimenti-extra"></div>
             <div class="riga-serie-note">
               <div class="slot-serie"></div>
-              <div class="field"><label>Note (opzionale)</label><input type="text" name="note" placeholder="es. presa larga, tempo 3-1-1" maxlength="120"></div>
+              <div class="field"><label>Note (opzionale)</label><input type="text" name="note" placeholder="es. presa larga, tempo 3-1-1" maxlength="${MAX_NOTE}"></div>
             </div>
             <div style="display:flex;gap:8px;">
               <button type="submit" class="btn primary small">Aggiungi</button>
@@ -1785,7 +1815,7 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
           }</div>
           <div class="riga-serie-note">
             <div class="slot-serie">${eSuperset(ex) ? campoSerieHtml(ex.serieTarget) : ""}</div>
-            <div class="field"><label>Note</label><input type="text" name="note" value="${esc(ex.note || "")}" maxlength="120" placeholder="es. presa larga, tempo 3-1-1"></div>
+            <div class="field"><label>Note</label><input type="text" name="note" value="${esc(ex.note || "")}" maxlength="${MAX_NOTE}" placeholder="es. presa larga, tempo 3-1-1"></div>
           </div>
           <div class="edit-form-actions">
             ${actionsHtml}
@@ -1892,16 +1922,20 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
             (ex.disegno && disegniCaricati.get(ex.disegno)) || `<span class="ex-num">${posizione}</span>`
           }</span>
           <div class="ex-testo">
-            <div class="ex-name">${
-            eSuperset(ex)
-              ? ex.parti.map(p => esc(p.nome)).join(`<span class="ss-piu">+</span>`) + `<span class="ss-tag">superset</span>`
-              : esc(ex.nome)
-          }${ex.note ? `<span class="sub">${esc(ex.note)}</span>` : ""}</div>
-            <div class="ex-target">${ex.serieTarget}×${
+            <div class="ex-col-nome">
+              <div class="ex-name">${
               eSuperset(ex)
-                ? ex.parti.map((p,i) => esc(ripDiParte(ex,i))).join(" / ")
-                : esc(ex.ripTarget)
-            }</div>
+                // nel superset ogni esercizio va a capo dopo il +
+                ? ex.parti.map(p => esc(p.nome)).join(`<span class="ss-piu">+</span><br>`)
+                : esc(ex.nome)
+              }</div>
+              <div class="ex-target">${ex.serieTarget}×${
+                eSuperset(ex)
+                  ? ex.parti.map((p,i) => esc(ripDiParte(ex,i))).join(" / ")
+                  : esc(ex.ripTarget)
+              }</div>
+            </div>
+            <div class="ex-col-note">${ex.note ? esc(ex.note) : ""}</div>
           </div>
           <div class="ex-last">${lastBlock}</div>
           ${open ? `<button class="btn-icona ex-edit-btn" data-action="toggle-edit-ex" data-ex="${ex.id}"
@@ -2235,9 +2269,11 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
   // già la home — come la navigazione di sistema dell'iPhone: la home arriva
   // da un po' più a sinistra e si schiarisce man mano che la scheda scivola via.
   (function gestoIndietro(){
-    const shell = document.querySelector(".shell");
+    // scorre solo la pagina: il banner in alto resta fermo, cambia solo la freccia
+    const shell = document.getElementById("pagina");
     const retro = document.getElementById("retro");
-    const retroShell = retro.querySelector(".shell");
+    const retroShell = document.getElementById("retroPagina");
+    const freccia = document.getElementById("azioniSinistra");
     const velo = document.getElementById("retroVelo");
     // il timer galleggia sopra la pagina: deve scorrere via insieme a lei
     const mobili = () => [shell, document.getElementById("cronoBolla"), document.getElementById("cronoRiquadro")];
@@ -2273,11 +2309,15 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
       retroShell.style.transform = "translate3d(" + (-(1 - avanzamento) * larghezza * PARALLASSE) + "px,0,0)";
       velo.style.transition = transizione ? "opacity " + transizione : "none";
       velo.style.opacity = String((1 - avanzamento) * OMBRA);
+      // la freccia per tornare indietro sparisce man mano: in home non c'è
+      freccia.style.transition = transizione ? "opacity " + transizione : "none";
+      freccia.style.opacity = String(Math.max(0, 1 - avanzamento * 1.6));
     }
 
     function pulisci(){
       for (const el of [...mobili(), retroShell]){ el.style.transition = ""; el.style.transform = ""; }
       velo.style.transition = ""; velo.style.opacity = "";
+      freccia.style.transition = ""; freccia.style.opacity = "";
       shell.style.willChange = "";
       shell.classList.remove("trascinando");
       retro.hidden = true;
@@ -2594,7 +2634,7 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
   // vengono attratti, come da una calamita, alla stessa distanza dai bordi della partenza.
   const MARGINE = 16;        // distanza dai bordi negli angoli, come la posizione iniziale
   const BORDO_MIN = 6;       // quanto si può avvicinare al bordo trascinando
-  const RAGGIO_CALAMITA = 48;  // distanza da un bordo entro cui scatta l'attrazione
+  const RAGGIO_CALAMITA = 90;  // distanza da un angolo entro cui scatta l'attrazione
   const larghezza = () => document.documentElement.clientWidth;
   const altezza = () => document.documentElement.clientHeight;
 
@@ -2625,37 +2665,58 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
     el.style.bottom = inBasso ? (altezza() - p.y - h) + "px" : "auto";
   }
 
-  // Ogni bordo attira per conto suo: vicino a un lato si allinea a quel lato,
-  // vicino a due (un angolo) si allinea a entrambi.
-  function calamita(el){
+  // Una sola regola, prevedibile: solo i quattro angoli attirano. Lasciato lontano
+  // dagli angoli resta esattamente dove lo si è messo.
+  function angoloVicino(el){
     const r = el.getBoundingClientRect();
     const z = zoneSicure();
-    const attira = (pos, bordi) => {
-      for (const b of bordi) if (Math.abs(pos - b) <= RAGGIO_CALAMITA) return b;
-      return pos;
-    };
-    const x = attira(r.left, [MARGINE + z.sinistra, larghezza() - r.width - MARGINE - z.destra]);
-    const y = attira(r.top, [MARGINE + z.alto, altezza() - r.height - MARGINE - z.basso]);
-    metti(el, r.left, r.top);          // fissa gli ancoraggi prima di animare
-    if (x === r.left && y === r.top) return;
+    const xs = [MARGINE + z.sinistra, larghezza() - r.width - MARGINE - z.destra];
+    const ys = [MARGINE + z.alto, altezza() - r.height - MARGINE - z.basso];
+    let meglio = null, distanza = Infinity;
+    for (const x of xs) for (const y of ys){
+      const d = Math.hypot(r.left - x, r.top - y);
+      if (d < distanza){ distanza = d; meglio = { x, y }; }
+    }
+    return distanza <= RAGGIO_CALAMITA ? meglio : null;
+  }
+
+  // L'aggancio si anima con transform, che il telefono muove senza ricalcolare la pagina:
+  // l'elemento va subito al posto finale e una traslazione lo fa partire da dov'era.
+  const animazioni = new WeakMap();
+  function calamita(el){
+    const r = el.getBoundingClientRect();
+    const meta = angoloVicino(el);
+    metti(el, r.left, r.top);                  // fissa gli ancoraggi sul lato più vicino
+    if (!meta) return;
+    metti(el, meta.x, meta.y);
+    const dopo = el.getBoundingClientRect();
+    const dx = r.left - dopo.left, dy = r.top - dopo.top;
+    if (!dx && !dy) return;
+    el.style.transition = "none";
+    el.style.transform = "translate3d(" + dx + "px," + dy + "px,0)";
     void el.offsetWidth;
-    const curva = " .28s cubic-bezier(.3,1.35,.5,1)";
-    el.style.transition = ["left","right","top","bottom"].map(p => p + curva).join(", ");
-    metti(el, x, y);
-    setTimeout(() => { el.style.transition = ""; }, 300);
+    el.style.transition = "transform .34s cubic-bezier(.22,.9,.3,1)";
+    el.style.transform = "";
+    clearTimeout(animazioni.get(el));
+    animazioni.set(el, setTimeout(() => { el.style.transition = ""; }, 360));
   }
 
   // Trascinamento condiviso da bolla e riquadro. "tocco" parte se non c'è stato spostamento.
   function rendiTrascinabile(el, { salta, tocco }){
-    let attivo = false, spostato = false, dx = 0, dy = 0, x0 = 0, y0 = 0;
+    let attivo = false, spostato = false, dx = 0, dy = 0, x0 = 0, y0 = 0, px = 0, py = 0, fotogramma = 0;
 
     el.addEventListener("pointerdown", (e) => {
       if (e.button > 0 || (salta && e.target.closest(salta))) return;
       attivo = true; spostato = false;
+      // se stava ancora scivolando verso un angolo, lo si ferma dov'è ora, senza scatti
       const r = el.getBoundingClientRect();
+      clearTimeout(animazioni.get(el));
+      el.style.transition = "none";
+      el.style.transform = "";
+      el.style.left = r.left + "px"; el.style.top = r.top + "px";
+      el.style.right = "auto"; el.style.bottom = "auto";
       dx = e.clientX - r.left; dy = e.clientY - r.top;
       x0 = e.clientX; y0 = e.clientY;
-      el.style.transition = "none";
       el.setPointerCapture(e.pointerId);
     });
 
@@ -2664,18 +2725,31 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
       // qualche pixel di tolleranza: un dito non sta mai perfettamente fermo
       if (!spostato && Math.hypot(e.clientX - x0, e.clientY - y0) < 6) return;
       spostato = true;
-      const p = limita(el, e.clientX - dx, e.clientY - dy);
-      el.style.left = p.x + "px"; el.style.top = p.y + "px";
-      el.style.right = "auto"; el.style.bottom = "auto";
+      px = e.clientX; py = e.clientY;
+      // una sola posizione per fotogramma: il movimento resta regolare
+      if (fotogramma) return;
+      fotogramma = requestAnimationFrame(() => {
+        fotogramma = 0;
+        if (!attivo) return;
+        const p = limita(el, px - dx, py - dy);
+        el.style.left = p.x + "px"; el.style.top = p.y + "px";
+      });
     });
 
     function rilascia(e){
       if (!attivo) return;
       attivo = false;
+      cancelAnimationFrame(fotogramma); fotogramma = 0;
       if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
-      el.style.transition = "";
-      if (spostato) calamita(el);
-      else if (tocco && e.type === "pointerup") tocco();
+      if (spostato){
+        const p = limita(el, px - dx, py - dy);      // ultima posizione del dito
+        el.style.left = p.x + "px"; el.style.top = p.y + "px";
+        el.style.transition = "";
+        calamita(el);
+      } else {
+        el.style.transition = "";
+        if (tocco && e.type === "pointerup") tocco();
+      }
     }
     el.addEventListener("pointerup", rilascia);
     el.addEventListener("pointercancel", rilascia);
