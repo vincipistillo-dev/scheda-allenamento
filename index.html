@@ -185,7 +185,11 @@
   .retro{
     position:fixed; inset:0; z-index:1; overflow:hidden;
     background:var(--ground); pointer-events:none;
+    /* stessi margini di sicurezza del body: la home dietro sta esattamente dove comparirà */
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
+  .retro > .shell{ will-change:transform; }
+  .retro-velo{ position:absolute; inset:0; z-index:3; background:#000; opacity:0; }
   .shell{ position:relative; z-index:2; }
   /* mentre scorre, la pagina copre lo strato dietro e proietta un'ombra, come su iPhone */
   .shell.trascinando{ background:var(--ground); box-shadow:-12px 0 28px rgba(0,0,0,.45); min-height:100vh; will-change:transform; }
@@ -261,15 +265,26 @@
   .giorno-cella.oggi .giorno-numero{ background:var(--accent); color:var(--accent-ink); }
   .giorno-cella.oggi.allenato::after{ background:var(--accent); }
   /* tema: comando segmentato a sole icone */
-  .scelta-tema{ display:inline-flex; gap:2px; padding:3px; border-radius:99px; background:var(--surface-2); border:1px solid var(--line); }
+  /* tema: tre scelte uguali che occupano tutta la larghezza del foglio */
+  .scelta-tema{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:2px; width:100%;
+    padding:3px; border-radius:99px; background:var(--surface-2); border:1px solid var(--line);
+  }
   .tema-btn{
-    display:inline-flex; align-items:center; justify-content:center;
-    width:58px; height:44px; border-radius:99px; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; min-width:0;
+    height:44px; border-radius:99px; cursor:pointer;
     background:transparent; border:none; color:var(--ink-faint);
+    font-family:var(--font-body); font-size:13px; font-weight:600;
     transition:background .15s ease, color .15s ease;
   }
   .tema-btn:hover{ color:var(--ink); }
-  .tema-btn .ico{ width:21px; height:21px; opacity:1; }
+  .tema-btn .ico{ width:18px; height:18px; opacity:1; }
+  .campo-nome{ width:100%; }
+  .campo-nome input{
+    width:100%; padding:10px 14px; border-radius:14px;
+    background:var(--surface-2); border:1px solid var(--line-strong); color:var(--ink);
+    font-family:var(--font-body); font-size:16px;   /* 16px: iOS non ingrandisce la pagina */
+  }
   .tema-btn.attiva{ background:var(--accent); color:var(--accent-ink); }
   .chip{
     padding:7px 14px; border-radius:99px; cursor:pointer;
@@ -726,6 +741,7 @@
     </header>
     <div id="retroHome"></div>
   </div>
+  <div class="retro-velo" id="retroVelo"></div>
 </div>
 
 <!-- impostazioni: coprono tutto, con il contenuto dietro sfocato -->
@@ -791,6 +807,19 @@
 
   const STORAGE_KEY = "schedaDiFerro:v1";
   const CHIAVE_TEMA = "schedaDiFerro:tema";
+  const CHIAVE_NOME = "schedaDiFerro:nome";
+
+  function leggiPreferenza(chiave){
+    try{ return localStorage.getItem(chiave); }catch(e){ return null; }
+  }
+
+  // "Buongiorno, Vincenzo": il nome si imposta nelle impostazioni
+  function saluto(){
+    const ora = new Date().getHours();
+    const parola = ora < 13 ? "Buongiorno" : (ora < 18 ? "Buon pomeriggio" : "Buonasera");
+    const nome = (leggiPreferenza(CHIAVE_NOME) || "").trim();
+    return nome ? parola + ", " + nome : parola + ",";
+  }
   const BAR_KG = 20;
   const PLATES = [25,20,15,10,5,2.5,1.25];
 
@@ -900,7 +929,7 @@
     renamingDay:null, confirmDeleteDay:null, confirmDeleteEx:null, confirmDeleteHist:null,
     storicoEspanso:new Set(), storicoAperto:new Set(),
     schedaAperta:null, nuovaSchedaAperta:false, confermaEliminaScheda:null, rinominaScheda:null,
-    impostazioniAperte:false, messaggioImport:null
+    impostazioniAperte:false
   };
   let db = null;
   let dbReady = false;
@@ -1289,42 +1318,142 @@
     try{ localStorage.setItem(CHIAVE_TEMA, valore); }catch(e){}
   }
 
-  // ---- esporta / importa ----
+  // ---- esporta ----
   // La scheda esportata è il programma, non il diario: niente storico.
-  // Esce come tabella CSV, con una sezione per ogni giorno.
-  function schedaInTabella(sc){
-    const campo = (v) => {
-      const t = String(v ?? "");
-      // vanno protetti i campi che contengono separatore, virgolette o un a capo
-      const daProteggere = t.includes(";") || t.includes('"') || t.includes("\n") || t.includes("\r");
-      return daProteggere ? '"' + t.replace(/"/g, '""') + '"' : t;
-    };
+  // Esce come foglio Excel con una tabella per ogni giorno: in cima il nome del giorno
+  // su un'unica riga, poi le colonne Nome, Serie, Ripetizioni e Note.
+  function righeGiorno(g){
     const righe = [];
-    for (const g of sc.giorni){
-      righe.push(campo(g.nome));                          // il giorno intitola la tabella
-      righe.push(["Nome","Serie","Ripetizioni","Note"].join(";"));
-      for (const e of g.esercizi){
-        if (eSuperset(e)){
-          e.parti.forEach((parte, i) => {
-            righe.push([campo(parte.nome), i === 0 ? e.serieTarget : "",
-                        campo(ripDiParte(e, i)),
-                        campo(i === 0 ? (e.note || "") : "in superset")].join(";"));
-          });
-        } else {
-          righe.push([campo(e.nome), e.serieTarget, campo(e.ripTarget), campo(e.note || "")].join(";"));
-        }
+    for (const e of g.esercizi){
+      if (eSuperset(e)){
+        // ogni movimento del superset ha la sua riga; le serie valgono per tutti
+        e.parti.forEach((parte, i) => righe.push([
+          parte.nome, i === 0 ? e.serieTarget : "", ripDiParte(e, i),
+          i === 0 ? (e.note || "") : "in superset con " + e.parti[0].nome
+        ]));
+      } else {
+        righe.push([e.nome, e.serieTarget, e.ripTarget, e.note || ""]);
       }
-      righe.push("");                                     // riga vuota fra un giorno e l'altro
     }
-    return righe.join("\r\n");
+    return righe;
+  }
+
+  const xml = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  // Foglio in formato Office Open XML. Stili: 1 = nome del giorno, 2 = intestazione,
+  // 3 = testo, 4 = valore centrato
+  function foglioXlsx(sc){
+    const COL = ["A","B","C","D"];
+    const righe = [], unioni = [];
+    let r = 0;
+    const cella = (c, valore, stile) => {
+      const rif = COL[c] + r;
+      if (typeof valore === "number") return `<c r="${rif}" s="${stile}"><v>${valore}</v></c>`;
+      return `<c r="${rif}" s="${stile}" t="inlineStr"><is><t xml:space="preserve">${xml(valore)}</t></is></c>`;
+    };
+    for (const g of [...sc.giorni].sort((a,b) => a.ordine - b.ordine)){
+      r++;
+      righe.push(`<row r="${r}" ht="24" customHeight="1">${cella(0, g.nome, 1)}${[1,2,3].map(c => cella(c, "", 1)).join("")}</row>`);
+      unioni.push(`<mergeCell ref="A${r}:D${r}"/>`);
+      r++;
+      righe.push(`<row r="${r}">${["Nome","Serie","Ripetizioni","Note"].map((t, c) => cella(c, t, 2)).join("")}</row>`);
+      for (const riga of righeGiorno(g)){
+        r++;
+        const serie = parseInt(riga[1], 10);
+        righe.push(`<row r="${r}">${cella(0, riga[0], 3)}${cella(1, isNaN(serie) ? "" : serie, 4)}${cella(2, String(riga[2] ?? ""), 4)}${cella(3, riga[3], 3)}</row>`);
+      }
+      r++;                                               // riga vuota fra una tabella e l'altra
+    }
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews>
+<cols><col min="1" max="1" width="36" customWidth="1"/><col min="2" max="2" width="9" customWidth="1"/><col min="3" max="3" width="14" customWidth="1"/><col min="4" max="4" width="40" customWidth="1"/></cols>
+<sheetData>${righe.join("")}</sheetData>
+${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</mergeCells>` : ""}
+</worksheet>`;
+  }
+
+  function fileXlsx(sc){
+    const titoloFoglio = xml(sc.nome.replace(/[\\\/?*\[\]:]/g, "").slice(0, 31) || "Scheda");
+    const lato = (l) => `<${l} style="thin"><color rgb="FFD3C3AC"/></${l}>`;
+    const bordo = ["left","right","top","bottom"].map(lato).join("") + "<diagonal/>";
+    return {
+      "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`,
+      "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+      "xl/workbook.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${titoloFoglio}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+      "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+      "xl/styles.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="13"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFA8663E"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEFDCC7"/></patternFill></fill></fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border>${bordo}</border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="5">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" indent="1"/></xf>
+<xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`,
+      "xl/worksheets/sheet1.xml": foglioXlsx(sc)
+    };
+  }
+
+  // Archivio zip senza compressione: è tutto ciò che serve a un .xlsx,
+  // e così non servono librerie esterne.
+  const TABELLA_CRC = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++){
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(byte){
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < byte.length; i++) c = TABELLA_CRC[(c ^ byte[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function creaZip(file){
+    const cod = new TextEncoder();
+    const parti = [], centrale = [];
+    let scarto = 0;
+    for (const [nome, testo] of Object.entries(file)){
+      const n = cod.encode(nome), dati = cod.encode(testo), crc = crc32(dati);
+      const locale = new DataView(new ArrayBuffer(30));
+      locale.setUint32(0, 0x04034b50, true); locale.setUint16(4, 20, true); locale.setUint16(6, 0x0800, true); locale.setUint16(12, 0x21, true);   // data: 1/1/1980
+      locale.setUint32(14, crc, true); locale.setUint32(18, dati.length, true); locale.setUint32(22, dati.length, true);
+      locale.setUint16(26, n.length, true);
+      parti.push(new Uint8Array(locale.buffer), n, dati);
+      const voce = new DataView(new ArrayBuffer(46));
+      voce.setUint32(0, 0x02014b50, true); voce.setUint16(4, 20, true); voce.setUint16(6, 20, true); voce.setUint16(8, 0x0800, true); voce.setUint16(14, 0x21, true);
+      voce.setUint32(16, crc, true); voce.setUint32(20, dati.length, true); voce.setUint32(24, dati.length, true);
+      voce.setUint16(28, n.length, true); voce.setUint32(42, scarto, true);
+      centrale.push(new Uint8Array(voce.buffer), n);
+      scarto += 30 + n.length + dati.length;
+    }
+    const lungCentrale = centrale.reduce((s, p) => s + p.length, 0);
+    const quanti = Object.keys(file).length;
+    const fine = new DataView(new ArrayBuffer(22));
+    fine.setUint32(0, 0x06054b50, true);
+    fine.setUint16(8, quanti, true); fine.setUint16(10, quanti, true);
+    fine.setUint32(12, lungCentrale, true); fine.setUint32(16, scarto, true);
+    return new Blob([...parti, ...centrale, new Uint8Array(fine.buffer)]);
   }
 
   async function esportaScheda(){
     const sc = schedaCorrente();
     if (!sc) return;
-    const testo = "﻿" + schedaInTabella(sc);          // il segno iniziale fa aprire bene gli accenti
-    const nomeFile = sc.nome.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") + ".csv";
-    const file = new File([testo], nomeFile, { type: "text/csv" });
+    const nomeFile = (sc.nome.replace(/[^\w\sàèéìòù-]/gi, "").trim().replace(/\s+/g, "-") || "scheda") + ".xlsx";
+    const file = new File([creaZip(fileXlsx(sc))], nomeFile,
+      { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
     // sul telefono conviene il foglio di condivisione, altrove il salvataggio diretto
     if (navigator.canShare && navigator.canShare({ files: [file] })){
@@ -1335,38 +1464,6 @@
     a.href = url; a.download = nomeFile;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  function importaDaTesto(testo){
-    let dati;
-    try{ dati = JSON.parse(testo); }catch(e){ return "Il file non è leggibile."; }
-    if (!dati || !Array.isArray(dati.giorni)) return "Questo file non contiene una scheda.";
-
-    const nuova = {
-      id: uid("sc"), nome: (dati.nome || "Scheda importata").slice(0,60), creata: todayISO(),
-      giorni: dati.giorni.map((g, i) => ({
-        id: uid("g"), nome: (g.nome || "Giorno").slice(0,60), ordine: g.ordine ?? i,
-        esercizi: (g.esercizi || []).map(e => {
-          const ex = {
-            id: uid("e"), nome: (e.nome || "Esercizio").slice(0,60),
-            serieTarget: parseInt(e.serieTarget,10) || 3,
-            ripTarget: String(e.ripTarget || "10").slice(0,12),
-            note: String(e.note || "").slice(0,120),
-            storico: []                      // il diario resta quello di chi importa
-          };
-          if (Array.isArray(e.parti) && e.parti.length > 1){
-            ex.parti = e.parti.map(p => ({ nome: String(p.nome || "").slice(0,60),
-                                           ripTarget: String(p.ripTarget || "").slice(0,12) }));
-          }
-          return ex;
-        })
-      }))
-    };
-    state.schede.push(nuova);
-    saveLocal();
-    if (dbReady && db) db.doc("schede/" + nuova.id).set(nuova).catch(()=>{});
-    recuperaImmaginiMancanti();
-    return null;
   }
 
   // ---- rendering ----
@@ -1384,10 +1481,8 @@
     const zona = document.getElementById("addDayZone");
     const pannello = document.getElementById("dayPanel");
 
-    const ora = new Date().getHours();
-    const saluto = ora < 13 ? "Buongiorno," : (ora < 18 ? "Buon pomeriggio," : "Buonasera,");
     const titolo = document.getElementById("titolo");
-    titolo.textContent = sc ? sc.nome : saluto;
+    titolo.textContent = sc ? sc.nome : saluto();
     renderSettimana(document.getElementById("settimana"), !sc);
     renderImpostazioni();
     const sotto = document.getElementById("sottotitolo");
@@ -1400,7 +1495,8 @@
     document.getElementById("azioniTitolo").innerHTML = sc
       ? `<button class="btn-icona" data-action="esporta-scheda" title="Esporta la scheda" aria-label="Esporta la scheda">${ICONE.esporta}</button>`
       : "";
-    document.getElementById("azioniTop").innerHTML = sc ? "" : BOTTONE_IMPOSTAZIONI;
+    // le impostazioni stanno sempre allo stesso posto, in home come dentro la scheda
+    document.getElementById("azioniTop").innerHTML = BOTTONE_IMPOSTAZIONI;
 
     // senza scheda aperta si vede l'elenco, altrimenti il contenuto della scheda
     document.body.classList.toggle("in-scheda", !!sc);
@@ -1424,26 +1520,23 @@
     velo.hidden = !ui.impostazioniAperte;
     document.body.classList.toggle("bloccato", ui.impostazioniAperte);
     if (!ui.impostazioniAperte) return;
+    // mentre si scrive il nome non si ridisegna, altrimenti la tastiera si chiude
+    if (document.activeElement && document.activeElement.id === "nomeUtente") return;
 
-    const tema = localStorage.getItem(CHIAVE_TEMA) || "auto";
+    const tema = leggiPreferenza(CHIAVE_TEMA) || "auto";
     document.getElementById("foglioCorpo").innerHTML = `
+      <span class="eyebrow">Il tuo nome</span>
+      <form class="campo-nome" data-form="nome-utente">
+        <input type="text" name="nomeUtente" id="nomeUtente" value="${esc(leggiPreferenza(CHIAVE_NOME) || "")}"
+               placeholder="Come ti chiami?" maxlength="30" autocomplete="given-name" enterkeyhint="done">
+      </form>
+
       <span class="eyebrow">Tema</span>
       <div class="scelta-tema" role="group" aria-label="Tema">
-        ${[["auto","Automatico",ICONE.automatico],["light","Chiaro",ICONE.sole],["dark","Scuro",ICONE.luna]].map(([v,t,ic]) =>
+        ${[["auto","Auto",ICONE.automatico],["light","Chiaro",ICONE.sole],["dark","Scuro",ICONE.luna]].map(([v,t,ic]) =>
           `<button class="tema-btn ${tema === v ? "attiva" : ""}" data-action="imposta-tema" data-tema="${v}"
-                   title="${t}" aria-label="${t}" aria-pressed="${tema === v}">${ic}</button>`).join("")}
+                   aria-pressed="${tema === v}">${ic}<span>${t}</span></button>`).join("")}
       </div>
-
-      <span class="eyebrow">Importa una scheda</span>
-      <p class="nota-foglio">Incolla qui la tabella della scheda: una riga per esercizio, i giorni come intestazione.</p>
-      <form data-form="importa-testo">
-        <textarea name="testo" class="area-import" rows="6" placeholder="Giorno A — Spinta&#10;Panca piana  4x8-10  presa media&#10;Croci ai cavi  3x12-15"></textarea>
-        <div class="foglio-azioni">
-          <button type="submit" class="btn primary small">${ICONE.importa}Importa</button>
-        </div>
-      </form>
-      <input type="file" id="fileImport" accept="application/json,.json" hidden>
-      ${ui.messaggioImport ? `<div class="empty-note avviso">${esc(ui.messaggioImport)}</div>` : ""}
 
       <span class="eyebrow">Crediti</span>
       <p class="nota-foglio">Illustrazioni degli esercizi:
@@ -1539,10 +1632,7 @@
         })()
       : "";
 
-    const avviso = ui.messaggioImport ? `<div class="empty-note avviso">${esc(ui.messaggioImport)}</div>` : "";
-
     contenitore.innerHTML = `
-      ${avviso}
       ${conferma}
       <div class="schede-elenco">${carte || '<div class="empty-note">Nessuna scheda. Creane una qui sotto.</div>'}</div>
       ${ui.nuovaSchedaAperta
@@ -1871,22 +1961,6 @@
     } else if (action === "imposta-tema"){
       applicaTema(t.getAttribute("data-tema"));
       render();
-    } else if (action === "importa-scheda"){
-      const input = document.getElementById("fileImport");
-      input.onchange = () => {
-        const file = input.files[0];
-        if (!file) return;
-        const lettore = new FileReader();
-        lettore.onload = () => {
-          const errore = importaDaTesto(lettore.result);
-          ui.messaggioImport = errore || "Scheda importata.";
-          ui.impostazioniAperte = !errore ? false : true;
-          render();
-          setTimeout(() => { ui.messaggioImport = null; render(); }, 4000);
-        };
-        lettore.readAsText(file);
-      };
-      input.click();
     } else if (action === "toggle-nuova-scheda"){
       ui.nuovaSchedaAperta = !ui.nuovaSchedaAperta;
       render();
@@ -2022,29 +2096,22 @@
     }
   });
 
+  // il nome si salva mentre lo si scrive e il saluto si aggiorna subito
+  document.addEventListener("input", (e) => {
+    if (e.target.id !== "nomeUtente") return;
+    try{ localStorage.setItem(CHIAVE_NOME, e.target.value.trim().slice(0,30)); }catch(err){}
+    if (!ui.schedaAperta) document.getElementById("titolo").textContent = saluto();
+  });
+
   document.addEventListener("submit", (e) => {
     e.preventDefault();
     const form = e.target;
     const formType = form.getAttribute("data-form");
     const data = Object.fromEntries(new FormData(form).entries());
 
-    if (formType === "importa-testo"){
-      const testo = (data.testo || "").trim();
-      const link = testo.match(/https?:\/\/\S*canva\.\S+/i);
-      if (link && testo.replace(link[0], "").trim().length < 20){
-        ui.messaggioImport = "Il link di Canva non può essere letto dall'app: apri la scheda su Canva, seleziona la tabella, copiala e incollala qui.";
-      } else {
-        const giorni = leggiSchedaIncollata(testo);
-        if (!giorni.length){
-          ui.messaggioImport = "Non ho riconosciuto esercizi. Ogni riga deve contenere serie e ripetizioni, per esempio: Panca piana 4x8-10.";
-        } else {
-          const esercizi = giorni.reduce((n,g) => n + g.esercizi.length, 0);
-          importaDaTesto(JSON.stringify({ nome: "Scheda importata", giorni }));
-          ui.messaggioImport = `Importata: ${giorni.length} giorni, ${esercizi} esercizi.`;
-          ui.impostazioniAperte = false;
-        }
-      }
-      render();
+    if (formType === "nome-utente"){
+      // Invio chiude la tastiera: il nome è già salvato mentre si scrive
+      document.activeElement && document.activeElement.blur();
     } else if (formType === "rinomina-scheda"){
       const sc = state.schede.find(x => x.id === form.getAttribute("data-scheda"));
       const nuovo = data.nome.trim();
@@ -2130,7 +2197,7 @@
 
   // ---- boot ----
   function boot(){
-    applicaTema(localStorage.getItem(CHIAVE_TEMA) || "auto");
+    applicaTema(leggiPreferenza(CHIAVE_TEMA) || "auto");
     state = migra(loadLocal()) || defaultState();
     if (!loadLocal()) saveLocal();
     render();
@@ -2165,39 +2232,66 @@
   }
 
   // Gesto per tornare all'elenco: la pagina segue il dito e, sotto, si vede
-  // già la home — come la navigazione di sistema.
+  // già la home — come la navigazione di sistema dell'iPhone: la home arriva
+  // da un po' più a sinistra e si schiarisce man mano che la scheda scivola via.
   (function gestoIndietro(){
     const shell = document.querySelector(".shell");
     const retro = document.getElementById("retro");
+    const retroShell = retro.querySelector(".shell");
+    const velo = document.getElementById("retroVelo");
     // il timer galleggia sopra la pagina: deve scorrere via insieme a lei
     const mobili = () => [shell, document.getElementById("cronoBolla"), document.getElementById("cronoRiquadro")];
-    const DURATA = 240;
-    // "attesa": il dito è sul bordo ma non si sa ancora se il gesto è orizzontale
-    let x0 = null, y0 = null, stato = null, ultimoX = 0, ultimoT = 0, velocita = 0, inChiusura = false;
+    const BORDO = 32;           // larghezza della fascia sinistra da cui parte il gesto
+    const SOGLIA = 8;           // movimento minimo per capire la direzione
+    const PARALLASSE = 0.3;     // di quanto la home dietro parte spostata a sinistra
+    const OMBRA = 0.22;         // quanto è scura la home dietro all'inizio
+    const DURATA = 260;
+    const CURVA = "cubic-bezier(.2,.8,.25,1)";
+
+    // stato: null | "attesa" (dito sul bordo, direzione ignota) | "trascina"
+    let stato = null, inChiusura = false;
+    let x0 = 0, y0 = 0, spostamento = 0, fotogramma = 0;
+    let campioni = [];          // ultime posizioni, per misurare la velocità del rilascio
 
     function preparaRetro(){
       document.getElementById("retroOggi").textContent = document.getElementById("oggi").textContent;
-      const ora = new Date().getHours();
-      document.getElementById("retroTitolo").textContent =
-        ora < 13 ? "Buongiorno," : (ora < 18 ? "Buon pomeriggio," : "Buonasera,");
+      document.getElementById("retroTitolo").textContent = saluto();
       // la home dietro è identica a quella che comparirà: stessa testata, settimana e schede
       document.getElementById("retroAzioni").innerHTML = BOTTONE_IMPOSTAZIONI;
       renderSettimana(document.getElementById("retroSettimana"), true);
       renderHome(document.getElementById("retroHome"));
-      retro.hidden = false;
     }
 
-    function sposta(px, transizione){
+    function disegna(px, transizione){
+      const larghezza = shell.offsetWidth || innerWidth;
+      const avanzamento = Math.min(1, Math.max(0, px / larghezza));
       for (const el of mobili()){
-        el.style.transition = transizione;
+        el.style.transition = transizione ? "transform " + transizione : "none";
         el.style.transform = px ? "translate3d(" + px + "px,0,0)" : "";
       }
+      retroShell.style.transition = transizione ? "transform " + transizione : "none";
+      retroShell.style.transform = "translate3d(" + (-(1 - avanzamento) * larghezza * PARALLASSE) + "px,0,0)";
+      velo.style.transition = transizione ? "opacity " + transizione : "none";
+      velo.style.opacity = String((1 - avanzamento) * OMBRA);
+    }
+
+    function pulisci(){
+      for (const el of [...mobili(), retroShell]){ el.style.transition = ""; el.style.transform = ""; }
+      velo.style.transition = ""; velo.style.opacity = "";
+      shell.style.willChange = "";
+      shell.classList.remove("trascinando");
+      retro.hidden = true;
     }
 
     function chiudiGesto(annulla){
+      cancelAnimationFrame(fotogramma);
       inChiusura = true;
-      stato = null; x0 = null;
-      sposta(annulla ? 0 : shell.offsetWidth, "transform " + DURATA + "ms cubic-bezier(.22,.9,.3,1)");
+      stato = null;
+      const larghezza = shell.offsetWidth || innerWidth;
+      // la durata si accorcia se manca poco alla fine, così la velocità resta costante
+      const resto = annulla ? spostamento : larghezza - spostamento;
+      const durata = Math.round(Math.max(120, DURATA * resto / larghezza));
+      disegna(annulla ? 0 : larghezza, durata + "ms " + CURVA);
       setTimeout(() => {
         if (!annulla){
           salvaModificheAperte();
@@ -2206,53 +2300,76 @@
           window.scrollTo(0, 0);     // la home dietro era mostrata dall'alto
         }
         // tutto nello stesso fotogramma: la pagina nuova prende il posto di quella dietro
-        sposta(0, "none");
-        shell.classList.remove("trascinando");
-        retro.hidden = true;
+        pulisci();
         inChiusura = false;
-      }, DURATA);
+      }, durata + 20);
     }
 
     document.addEventListener("touchstart", (e) => {
-      stato = null; x0 = null;
+      stato = null;
       if (inChiusura || !ui.schedaAperta || e.touches.length !== 1) return;
       const t = e.touches[0];
-      if (t.clientX > 40) return;                     // parte solo dal bordo sinistro
-      if (e.target.closest && e.target.closest(".crono-bolla, .crono-riquadro")) return;
-      x0 = t.clientX; y0 = t.clientY; stato = "attesa";
-      ultimoX = x0; ultimoT = e.timeStamp; velocita = 0;
+      if (t.clientX > BORDO) return;                  // parte solo dal bordo sinistro
+      if (e.target.closest && e.target.closest(".crono-bolla, .crono-riquadro, input, textarea")) return;
+      x0 = t.clientX; y0 = t.clientY; spostamento = 0;
+      campioni = [{ x: t.clientX, t: e.timeStamp }];
+      stato = "attesa";
+      // si prepara già ora, mentre il dito decide: al primo movimento è tutto pronto
+      shell.style.willChange = "transform";
+      preparaRetro();
     }, { passive:true });
 
     document.addEventListener("touchmove", (e) => {
       if (!stato) return;
+      if (e.touches.length !== 1){ if (stato === "trascina") chiudiGesto(true); else stato = null; return; }
       const t = e.touches[0];
       const dx = t.clientX - x0, dy = t.clientY - y0;
+
       if (stato === "attesa"){
-        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;          // ancora un tocco
-        if (dx <= 0 || Math.abs(dy) > Math.abs(dx)){ stato = null; return; }   // si sta scorrendo
-        // da qui in poi il gesto è nostro: la home dietro si prepara solo adesso,
-        // così un semplice tocco sul bordo (es. sulla freccia) non fa lampeggiare nulla
+        if (Math.hypot(dx, dy) < SOGLIA) return;               // ancora un tocco
+        // verticale o verso sinistra: è uno scorrimento normale della pagina
+        if (dx <= 0 || Math.abs(dy) > Math.abs(dx) * 0.8){
+          stato = null; shell.style.willChange = ""; return;
+        }
         stato = "trascina";
-        preparaRetro();
+        x0 = t.clientX;                // la pagina parte da ferma, senza scatto iniziale
         shell.classList.add("trascinando");
+        retro.hidden = false;
       }
+
       if (e.cancelable) e.preventDefault();          // niente scorrimento verticale durante il gesto
-      const dt = e.timeStamp - ultimoT;
-      if (dt > 0) velocita = (t.clientX - ultimoX) / dt;
-      ultimoX = t.clientX; ultimoT = e.timeStamp;
-      sposta(Math.max(0, dx), "none");
+      spostamento = Math.max(0, t.clientX - x0);
+      campioni.push({ x: t.clientX, t: e.timeStamp });
+      if (campioni.length > 5) campioni.shift();
+      // un solo aggiornamento per fotogramma, anche se i tocchi arrivano più fitti
+      cancelAnimationFrame(fotogramma);
+      fotogramma = requestAnimationFrame(() => disegna(spostamento, null));
     }, { passive:false });
 
     function fine(e){
-      if (stato !== "trascina"){ stato = null; x0 = null; return; }
-      const dx = e.changedTouches[0].clientX - x0;
-      // se il dito si è fermato prima di staccarsi, lo scatto non conta
-      if (e.timeStamp - ultimoT > 100) velocita = 0;
-      // chiude oltre un terzo dello schermo, o con uno scatto veloce verso destra
-      chiudiGesto(!(dx > innerWidth * 0.3 || velocita > 0.5));
+      if (stato !== "trascina"){
+        if (stato === "attesa") shell.style.willChange = "";
+        stato = null; return;
+      }
+      // velocità sugli ultimi ~100 ms: se il dito si è fermato prima di staccarsi, vale zero
+      const ora = e.timeStamp;
+      const recenti = campioni.filter(c => ora - c.t < 100);
+      let velocita = 0;
+      if (recenti.length > 1){
+        const a = recenti[0], b = recenti[recenti.length - 1];
+        if (b.t > a.t) velocita = (b.x - a.x) / (b.t - a.t);
+      }
+      const larghezza = shell.offsetWidth || innerWidth;
+      // chiude oltre un terzo dello schermo, o con uno scatto veloce verso destra;
+      // uno scatto verso sinistra annulla anche se si era andati oltre
+      const chiudi = velocita > 0.35 || (spostamento > larghezza * 0.33 && velocita > -0.2);
+      chiudiGesto(!chiudi);
     }
     document.addEventListener("touchend", fine, { passive:true });
-    document.addEventListener("touchcancel", () => { if (stato === "trascina") chiudiGesto(true); else stato = null; }, { passive:true });
+    document.addEventListener("touchcancel", () => {
+      if (stato === "trascina") chiudiGesto(true);
+      else { if (stato) shell.style.willChange = ""; stato = null; }
+    }, { passive:true });
   })();
 
   // Safari ignora user-scalable=no: gli eventi gesture sono l'unico modo di fermare il pizzico
