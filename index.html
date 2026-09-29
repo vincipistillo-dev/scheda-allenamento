@@ -660,11 +660,6 @@
     font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.14em;
     text-transform:uppercase; color:var(--accent);
   }
-  .crono-chiudi{
-    display:inline-flex; padding:4px; border-radius:7px; cursor:pointer;
-    background:transparent; border:none; color:var(--ink-faint);
-  }
-  .crono-chiudi:hover{ color:var(--accent); }
   .crono-tempo{
     position:relative; z-index:1;
     font-family:var(--font-mono); font-size:32px; font-weight:600; line-height:1;
@@ -806,9 +801,6 @@
 <div class="crono-riquadro" id="cronoRiquadro" hidden>
   <div class="crono-testa">
     <span class="crono-etichetta">Recupero</span>
-    <button class="crono-chiudi" id="cronoChiudi" aria-label="Chiudi il timer">
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
   </div>
 
   <div class="crono-quadrante" id="cronoQuadrante" hidden>
@@ -2517,16 +2509,19 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
       osc.connect(vol); vol.connect(suono.destination);
       osc.start(); osc.stop(suono.currentTime + 0.5);
     }catch(e){}
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    // circa un secondo di vibrazione (dove il browser lo permette: su iPhone no)
+    try{ if (navigator.vibrate) navigator.vibrate(1000); }catch(e){}
   }
 
   function batti(){
-    if (mancante() <= 0){
-      restante = 0;
+    if (inCorso && mancante() <= 0){
+      // a zero si avvisa e il timer torna da solo al recupero scelto, pronto a ripartire
       inCorso = false;
       clearInterval(battito); battito = null;
+      restante = durata;
       bottoneAvvia.textContent = "Avvia";
       aggiorna();
+      if (!riquadro.hidden) posizionaRuote();   // le ruote si posizionano solo da visibili
       segnale();
       return;
     }
@@ -2787,7 +2782,20 @@ ${unioni.length ? `<mergeCells count="${unioni.length}">${unioni.join("")}</merg
     }
   });
 
-  document.getElementById("cronoChiudi").addEventListener("click", chiudiRiquadro);
+  // Il riquadro si chiude toccando un punto qualsiasi fuori da lui. Quel tocco serve
+  // solo a chiudere: non deve anche aprire un esercizio o premere un pulsante sotto.
+  let ingoiaClic = false;
+  document.addEventListener("pointerdown", (e) => {
+    if (riquadro.hidden || riquadro.contains(e.target)) return;
+    chiudiRiquadro();
+    ingoiaClic = true;
+    setTimeout(() => { ingoiaClic = false; }, 600);
+  }, true);
+  document.addEventListener("click", (e) => {
+    if (!ingoiaClic) return;
+    ingoiaClic = false;
+    e.preventDefault(); e.stopPropagation();
+  }, true);
 
   bottoneAvvia.addEventListener("click", () => { inCorso ? ferma() : avvia(); });
   document.getElementById("cronoAzzera").addEventListener("click", azzera);
